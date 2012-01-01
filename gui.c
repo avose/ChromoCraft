@@ -77,7 +77,7 @@ void ViewPort3D(int x, int y, int w, int h)
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glViewport(x, y, w, h); 
-  gluPerspective(55.0f,(float)w/(float)h,0.8f,6.0f);
+  gluPerspective(60.0f,(float)w/(float)h,0.1f,100.0f);
   glTranslatef(0.0f, 0.0f, -2.0f);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -273,11 +273,18 @@ static void LayoutWidgets(glwindow_t *glw)
 {
 
   static button_gui_t    bquit = {"Quit", 0, 0, NULL};
-  static gameframe_gui_t gf    = {"gf",   0, 0, NULL};
+  static gameframe_gui_t gf;
   static bag_gui_t       bag;
 
   // Main game frame
-  AddWidget(glw, 8, 8, 768-16, 768-16, Gameframe_Draw, NULL, Gameframe_Down,    NULL, NULL, NULL, &gf);
+  memset(&gf,0,sizeof(gf));
+  gf.text = "gf";
+  AddWidget(glw, 8, 8, 768-16, 768-16, 
+	    Gameframe_Draw, 
+	    NULL, 
+	    Gameframe_MouseDown, Gameframe_MouseUp, Gameframe_MouseMove,
+	    NULL,
+	    &gf);
 
   // Bag / Intentory
   AddWidget(glw, 768, (768-16)/2, 128-8, (768-16)/2, Bag_Draw, NULL, Bag_Down, NULL, NULL, NULL, &bag);
