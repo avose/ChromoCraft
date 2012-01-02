@@ -53,6 +53,11 @@ bag.o: bag.c bag.h Makefile
 player.o: player.c player.h Makefile
 	${CC} ${OPTS} ${CFLAGS} -c player.c
 
+# I/O deps
+
+io_bitmap.o: io_bitmap.c io_bitmap.h Makefile
+	${CC} ${OPTS} ${CFLAGS} -c io_bitmap.c
+
 # GUI deps
 
 gui_button.o: gui_button.c gui_button.h gui.h types.h Makefile
@@ -77,8 +82,8 @@ chromo_craft.o: chromo_craft.c chromo_craft.h Makefile
 
 # Link
 
-chromo_craft: util.o random.o vector.o path.o color.o effect.o special.o gem.o tower.o enemy.o bag.o player.o gui_button.o gui_game_event.o gui_bag.o gui_gameframe.o gui.o chromo_craft.o Makefile
-	${CC} ${OPTS} -o chromo_craft util.o random.o vector.o path.o color.o effect.o special.o gem.o tower.o enemy.o bag.o player.o gui_button.o gui_game_event.o gui_bag.o gui_gameframe.o gui.o chromo_craft.o ${LIBS}
+chromo_craft: util.o random.o vector.o path.o color.o effect.o special.o gem.o tower.o enemy.o bag.o player.o io_bitmap.o gui_button.o gui_game_event.o gui_bag.o gui_gameframe.o gui.o chromo_craft.o Makefile
+	${CC} ${OPTS} -o chromo_craft util.o random.o vector.o path.o color.o effect.o special.o gem.o tower.o enemy.o bag.o player.o io_bitmap.o gui_button.o gui_game_event.o gui_bag.o gui_gameframe.o gui.o chromo_craft.o ${LIBS}
 
 # Maintenance
 

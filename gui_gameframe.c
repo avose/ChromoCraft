@@ -28,6 +28,8 @@
 #undef GUI_WIDGET
 #include "gui_gameframe.h"
 
+#include "io_bitmap.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Button callbacks
@@ -47,24 +49,33 @@ static void DrawGround()
   float color[4];
   int   i,j;
 
-  // !!av:
-  return;
+  static int    init=1;
+  static u32b_t floor;
+
+  if( init ) {
+    init = 0;
+    floor = LoadTexture("data/bmp/floor.bmp");
+  }
 
   color[0] = 0.75f;
   color[1] = 0.75f;
   color[2] = 0.75f;
   color[3] = 0.01f;
   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, floor);
   glBegin(GL_QUADS);
   for(i=0; i<32; i++) {
     for(j=0; j<32; j++) {
-      glVertex3f(     i/32.0f, -0.1f,     j/32.0f);
-      glVertex3f( (i+1)/32.0f, -0.1f,     j/32.0f);
-      glVertex3f( (i+1)/32.0f, -0.1f, (j+1)/32.0f);
-      glVertex3f(     i/32.0f, -0.1f, (j+1)/32.0f);
+      glNormal3f(0.0f, 1.0f, 0.0f);
+      glTexCoord2f(     i/32.0f,     j/32.0f);  glVertex3f(     i/32.0f, -0.1f,     j/32.0f);
+      glTexCoord2f( (i+1)/32.0f,     j/32.0f);  glVertex3f( (i+1)/32.0f, -0.1f,     j/32.0f);
+      glTexCoord2f( (i+1)/32.0f, (j+1)/32.0f);  glVertex3f( (i+1)/32.0f, -0.1f, (j+1)/32.0f);
+      glTexCoord2f(     i/32.0f, (j+1)/32.0f);  glVertex3f(     i/32.0f, -0.1f, (j+1)/32.0f);
     }
   }
   glEnd();
+  glDisable(GL_TEXTURE_2D);
 }
 
 static void DrawPath()
@@ -96,7 +107,7 @@ static void DrawTowers()
     // Draw a small sphere at the center of the tower
     sphere=gluNewQuadric();
     slices = stacks = 32;
-    r = 4 / 255.0f;
+    r = 2 / 255.0f;
     color[0] = (Statec->player.towers[i].gem.color.a[0])/255.0f;
     color[1] = (Statec->player.towers[i].gem.color.a[1])/255.0f;
     color[2] = (Statec->player.towers[i].gem.color.a[2])/255.0f;
@@ -106,7 +117,7 @@ static void DrawTowers()
     glTranslatef((Statec->player.towers[i].position.s.x)/255.0f,
 		 0.0f,
 		 (Statec->player.towers[i].position.s.y)/255.0f);
-    gluSphere( sphere, r, slices , stacks);
+    gluSphere(sphere, r, slices , stacks);
     glPopMatrix();
   }
 
@@ -191,6 +202,8 @@ static void DrawEvents(widget_t *w)
       glVertex3f((q->kill.enemy.s.x+2)/255.0f, 0.0f, (q->kill.enemy.s.y+2)/255.0f);
       glVertex3f((q->kill.enemy.s.x+2)/255.0f, 0.0f, (q->kill.enemy.s.y-2)/255.0f);
       glVertex3f((q->kill.enemy.s.x-2)/255.0f, 0.0f, (q->kill.enemy.s.y+2)/255.0f);
+      glVertex3f((q->kill.enemy.s.x)/255.0f, -2.0f/255.0f, (q->kill.enemy.s.y)/255.0f);
+      glVertex3f((q->kill.enemy.s.x)/255.0f,  2.0f/255.0f, (q->kill.enemy.s.y)/255.0f);
       glEnd();
       glDisable(GL_LINE_SMOOTH);
       // Remove if needed
@@ -212,9 +225,9 @@ static void DrawEvents(widget_t *w)
 void Gameframe_Draw(widget_t *w)
 {
   gameframe_gui_t *gf = (gameframe_gui_t*)w->wd;
-  GLfloat light_position[] = { 10.0, 10.0, -10.0, 1.0 };
-  GLfloat light_color[]    = { 1.0, 1.0, 1.0, 1.0 };
-  GLfloat ambient_color[]  = { 0.2, 0.2, 0.2, 1.0 };
+  GLfloat light_position[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+  GLfloat light_color[]    = { 1.0f, 1.0f, 1.0f, 1.0f };
+  GLfloat ambient_color[]  = { 0.1f, 0.1f, 0.1f, 1.0f };
 
   // Save 2D state so we can restore it later
   glMatrixMode(GL_MODELVIEW);
@@ -224,7 +237,7 @@ void Gameframe_Draw(widget_t *w)
   glMatrixMode(GL_MODELVIEW);
 
   // Switch to 3D perspective
-  ViewPort3D(w->x, w->y, w->w, w->h);
+  ViewPort3D(w->x, w->y, ScaleX(w, w->w), ScaleY(w, w->h));
   glMatrixMode(GL_MODELVIEW);
 
   // Setup lighting

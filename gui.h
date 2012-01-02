@@ -120,9 +120,10 @@ extern void UpdateGuiState(gstate_t *s);
 extern gstate_t         *Stateg,*Statec,*Statep;
 extern pthread_mutex_t   StateLock;
 
-extern void printGLf(GLuint font, const char *fmt, ...);
-extern void ViewPort3D(int x, int y, int w, int h);
-extern void ViewPort2D(glwindow_t *glw);
+extern void   printGLf(GLuint font, const char *fmt, ...);
+extern u32b_t LoadTexture(char *fn);
+extern void   ViewPort3D(int x, int y, int w, int h);
+extern void   ViewPort2D(glwindow_t *glw);
 
 extern void Cyan();
 extern void Yellow();

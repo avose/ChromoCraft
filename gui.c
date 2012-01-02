@@ -28,6 +28,8 @@
 #include "gui_gameframe.h"
 #include "gui_bag.h"
 
+#include "io_bitmap.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Local to gui.c only
@@ -60,6 +62,30 @@ void printGLf(unsigned int font, const char *fmt, ...)
   glListBase(font - 32);
   glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);
   glPopAttrib();
+}
+
+u32b_t LoadTexture(char *fn)
+{
+  io_bitmap_t bmp;
+  u32b_t      tex;
+
+  // Read the bitmap data from a file
+  io_bitmap_load(fn, &bmp);
+  
+  // Turn the bmp into an OpenGL texture with linear filtering
+  glGenTextures(1, &tex);
+  glBindTexture(GL_TEXTURE_2D, tex);
+  glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, bmp.w, bmp.h, 0, GL_RGB, GL_UNSIGNED_BYTE, bmp.d);
+
+  // I really don't understand why these need to be *here*
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  
+  // Free the bmp pixel data
+  io_bitmap_free(&bmp);
+  
+  // Return the OpenGL texture handle
+  return tex;
 }
 
 void ViewPort2D(glwindow_t *glw)
