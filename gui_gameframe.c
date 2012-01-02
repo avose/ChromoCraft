@@ -46,35 +46,76 @@ void Gameframe_Down(widget_t *w, const int x, const int y, const int b)
 
 static void DrawGround()
 {
-  float color[4];
-  int   i,j;
+  vector3_t  p0,p1,p2,p3,a,b,n0,n1;
+  float      color[4],shine[1];
+  int        i,j;
 
-  static int    init=1;
-  static u32b_t floor;
+  static int         init=1;
+  static u32b_t      floor;
+  static io_bitmap_t hm;
 
   if( init ) {
+    // Initialize if needed
     init = 0;
     floor = LoadTexture("data/bmp/floor.bmp");
+    io_bitmap_load("data/bmp/hm.bmp", &hm);
+    if( (hm.w != hm.h) || (hm.w != 64) ) {
+      Error("Heightmap bitmap must be 64x64 in size.\n");
+    }
   }
 
-  color[0] = 0.75f;
-  color[1] = 0.75f;
-  color[2] = 0.75f;
-  color[3] = 0.01f;
+  // Setup material properties and bind the floor texture
+  color[0] = 1.0f;
+  color[1] = 1.0f;
+  color[2] = 1.0f;
+  color[3] = 1.0f;
   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color);
+  shine[0] = 25.0f;
+  glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shine);
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, floor);
-  glBegin(GL_QUADS);
-  for(i=0; i<32; i++) {
-    for(j=0; j<32; j++) {
-      glNormal3f(0.0f, 1.0f, 0.0f);
-      glTexCoord2f(     i/32.0f,     j/32.0f);  glVertex3f(     i/32.0f, -0.1f,     j/32.0f);
-      glTexCoord2f( (i+1)/32.0f,     j/32.0f);  glVertex3f( (i+1)/32.0f, -0.1f,     j/32.0f);
-      glTexCoord2f( (i+1)/32.0f, (j+1)/32.0f);  glVertex3f( (i+1)/32.0f, -0.1f, (j+1)/32.0f);
-      glTexCoord2f(     i/32.0f, (j+1)/32.0f);  glVertex3f(     i/32.0f, -0.1f, (j+1)/32.0f);
+
+  // Draw the floor
+  glBegin(GL_TRIANGLES);
+  for(i=0; i<63; i++) {
+    for(j=0; j<63; j++) {
+      // Get points from the loop and heightmap
+      p0.s.x =  i/63.0f;
+      p0.s.y =  hm.d[(    i*64+    j)*3] / 255.0f / 4.0f - 0.1f;
+      p0.s.z =  j/63.0f;
+      p1.s.x =  (i+1)/63.0f;
+      p1.s.y =  hm.d[((i+1)*64+    j)*3] / 255.0f / 4.0f - 0.1f;
+      p1.s.z =  j/63.0f;
+      p2.s.x =  (i+1)/63.0f;
+      p2.s.y =  hm.d[((i+1)*64+(j+1))*3] / 255.0f / 4.0f - 0.1f;
+      p2.s.z =  (j+1)/63.0f;
+      p3.s.x =  i/63.0f;
+      p3.s.y =  hm.d[(    i*64+(j+1))*3] / 255.0f / 4.0f - 0.1f;
+      p3.s.z =  (j+1)/63.0f;
+      // Compute normals
+      vector3_sub_vector(&p0, &p1, &a);
+      vector3_sub_vector(&p0, &p2, &b);
+      vector3_crossprod(&b, &a, &n0);
+      vector3_normalize(&n0, &n0);
+      vector3_sub_vector(&p0, &p2, &a);
+      vector3_sub_vector(&p0, &p3, &b);
+      vector3_crossprod(&b, &a, &n1);
+      vector3_normalize(&n1, &n1);
+      // Set normals, texture coords, and verticies
+      glNormal3f(n0.s.x, n0.s.y, n0.s.z);
+      glTexCoord2f(     i/63.0f,     j/63.0f);  glVertex3f(p0.s.x, p0.s.y, p0.s.z);
+      glTexCoord2f( (i+1)/63.0f,     j/63.0f);  glVertex3f(p1.s.x, p1.s.y, p1.s.z);
+      glTexCoord2f( (i+1)/63.0f, (j+1)/63.0f);  glVertex3f(p2.s.x, p2.s.y, p2.s.z);
+      glNormal3f(n1.s.x, n1.s.y, n1.s.z);
+      glTexCoord2f( (i+1)/63.0f, (j+1)/63.0f);  glVertex3f(p2.s.x, p2.s.y, p2.s.z);
+      glTexCoord2f(     i/63.0f, (j+1)/63.0f);  glVertex3f(p3.s.x, p3.s.y, p3.s.z);
+      glTexCoord2f(     i/63.0f,     j/63.0f);  glVertex3f(p0.s.x, p0.s.y, p0.s.z);
     }
   }
   glEnd();
+
+  // 
   glDisable(GL_TEXTURE_2D);
 }
 
@@ -100,7 +141,7 @@ static void DrawPath()
 static void DrawTowers()
 {
   GLUquadric *sphere;
-  float       r,color[4];
+  float       r,color[4],white[4]={1.0f,1.0f,1.0f,1.0f};
   int         i,j,slices,stacks;
 
   for(i=0; i<Statec->player.ntowers; i++) {
@@ -112,7 +153,8 @@ static void DrawTowers()
     color[1] = (Statec->player.towers[i].gem.color.a[1])/255.0f;
     color[2] = (Statec->player.towers[i].gem.color.a[2])/255.0f;
     color[3] = 0.75f;
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, white);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color);
     glPushMatrix();
     glTranslatef((Statec->player.towers[i].position.s.x)/255.0f,
 		 0.0f,
@@ -129,7 +171,8 @@ static void DrawTowers()
     color[1] = (Statec->player.towers[i].gem.color.a[1])/255.0f;
     color[2] = (Statec->player.towers[i].gem.color.a[2])/255.0f;
     color[3] = 0.75f;
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, white);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color);
     r = (Statec->player.towers[i].gem.range) / 255.0f;
     for(j=0; j<32; ) {
       glVertex3f((Statec->player.towers[i].position.s.x)/255.0f+r*cos(2*3.14159265*(j/31.0)), 0.0f,
@@ -226,7 +269,8 @@ void Gameframe_Draw(widget_t *w)
 {
   gameframe_gui_t *gf = (gameframe_gui_t*)w->wd;
   GLfloat light_position[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-  GLfloat light_color[]    = { 1.0f, 1.0f, 1.0f, 1.0f };
+  GLfloat specular_color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+  GLfloat diffuse_color[]  = { 0.7f, 0.7f, 0.7f, 1.0f };
   GLfloat ambient_color[]  = { 0.1f, 0.1f, 0.1f, 1.0f };
 
   // Save 2D state so we can restore it later
@@ -244,8 +288,8 @@ void Gameframe_Draw(widget_t *w)
   glShadeModel(GL_SMOOTH);
   glLightfv(GL_LIGHT0, GL_POSITION, light_position );
   glLightfv(GL_LIGHT0, GL_AMBIENT,  ambient_color );
-  glLightfv(GL_LIGHT0, GL_SPECULAR, light_color );
-  glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_color );
+  glLightfv(GL_LIGHT0, GL_SPECULAR, specular_color );
+  glLightfv(GL_LIGHT0, GL_DIFFUSE,  diffuse_color );
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glEnable(GL_DEPTH_TEST);
