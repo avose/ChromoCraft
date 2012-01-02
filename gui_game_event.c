@@ -112,8 +112,6 @@ eventq_t* gui_game_event_get(eventq_t *node)
 
 void gui_game_event_remove(eventq_t *node)
 {
-  eventq_t *t;
-  
   gui_game_event_init();
 
   pthread_mutex_lock(&EventLock);

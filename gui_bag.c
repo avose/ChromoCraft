@@ -43,7 +43,7 @@ void Bag_Down(widget_t *w, const int x, const int y, const int b)
 
 void Bag_Draw(widget_t *w)
 {
-  bag_gui_t *gf = (bag_gui_t*)w->wd;
+  //bag_gui_t *gf = (bag_gui_t*)w->wd;
 
   u32b_t i,j,x,y;
   double r,ratio=w->w/((double)w->h);

@@ -18,6 +18,7 @@
 #define CHROMO_CRAFT_C
 #include "chromo_craft.h"
 #include "gui.h"
+#include "gui_game_event.h"
 
 static state_t *State;
 
@@ -47,6 +48,12 @@ static void init_state()
   // Set the current time
   State->time = 1;
 
+  // Load the terrain heightmap
+  io_bitmap_load("data/bmp/hm.bmp", &(State->terrain));
+  if( (State->terrain.w != State->terrain.h) || (State->terrain.w != 64) ) {
+    Error("Terrain heightmap bitmap must be 64x64 in size.\n");
+  }
+
   // Set the player up as level 1
   State->player.mana      =   50;
   State->player.base_mana =  100;
@@ -57,6 +64,7 @@ static void init_state()
 ////////////////////////////////////////////////////////////
 
 // Some debugging helpers:
+#if 0
 static void print_towers()
 {
   u32b_t i;
@@ -115,6 +123,7 @@ static void print_player()
 	  State->player.base_mana
 	  );
 }
+#endif
 
 ////////////////////////////////////////////////////////////
 // Randon initial setup
@@ -310,7 +319,7 @@ u64b_t get_time()
 static void game_loop()
 {
   u64b_t         ticks = 0;
-  u64b_t         t1,t2,sleep,i;
+  u64b_t         t1,t2,sleep;
 
   // Set a path for enemies ...
   add_some_path();
@@ -321,8 +330,8 @@ static void game_loop()
   add_some_gems();
 
   // Start the GUI
-  StartGUI("pre-Alpha",State); 
-  UpdateGuiState(State);
+  StartGUI("pre-Alpha",((gstate_t*)State)); 
+  UpdateGuiState(((gstate_t*)State));
 
   while( (State->time = ++ticks) ) {
 
@@ -336,7 +345,7 @@ static void game_loop()
     t2 = get_time();
 
     // Update the gui
-    UpdateGuiState(State);
+    UpdateGuiState(((gstate_t*)State));
 
     // Sleep for the remainder of the tick cycle
     if( (t1 < t2) && ((t2-t1) < 5000) ) {

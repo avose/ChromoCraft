@@ -52,16 +52,11 @@ static void DrawGround()
 
   static int         init=1;
   static u32b_t      floor;
-  static io_bitmap_t hm;
 
   if( init ) {
     // Initialize if needed
     init = 0;
     floor = LoadTexture("data/bmp/floor.bmp");
-    io_bitmap_load("data/bmp/hm.bmp", &hm);
-    if( (hm.w != hm.h) || (hm.w != 64) ) {
-      Error("Heightmap bitmap must be 64x64 in size.\n");
-    }
   }
 
   // Setup material properties and bind the floor texture
@@ -82,16 +77,16 @@ static void DrawGround()
     for(j=0; j<63; j++) {
       // Get points from the loop and heightmap
       p0.s.x =  i/63.0f;
-      p0.s.y =  hm.d[(    i*64+    j)*3] / 255.0f / 4.0f - 0.1f;
+      p0.s.y =  Statec->terrain.d[(    i*64+    j)*3] / 255.0f / 4.0f;
       p0.s.z =  j/63.0f;
       p1.s.x =  (i+1)/63.0f;
-      p1.s.y =  hm.d[((i+1)*64+    j)*3] / 255.0f / 4.0f - 0.1f;
+      p1.s.y =  Statec->terrain.d[((i+1)*64+    j)*3] / 255.0f / 4.0f;
       p1.s.z =  j/63.0f;
       p2.s.x =  (i+1)/63.0f;
-      p2.s.y =  hm.d[((i+1)*64+(j+1))*3] / 255.0f / 4.0f - 0.1f;
+      p2.s.y =  Statec->terrain.d[((i+1)*64+(j+1))*3] / 255.0f / 4.0f;
       p2.s.z =  (j+1)/63.0f;
       p3.s.x =  i/63.0f;
-      p3.s.y =  hm.d[(    i*64+(j+1))*3] / 255.0f / 4.0f - 0.1f;
+      p3.s.y =  Statec->terrain.d[(    i*64+(j+1))*3] / 255.0f / 4.0f;
       p3.s.z =  (j+1)/63.0f;
       // Compute normals
       vector3_sub_vector(&p0, &p1, &a);
@@ -115,13 +110,14 @@ static void DrawGround()
   }
   glEnd();
 
-  // 
+  // Disable textures as the default?
   glDisable(GL_TEXTURE_2D);
 }
 
 static void DrawPath()
 {
   path_t *p;
+  int     x,y;
 
   // Draw enemy path
   glEnable(GL_LINE_SMOOTH);
@@ -129,9 +125,17 @@ static void DrawPath()
     glColor3f(0.2f, 0.2f, 0.2f);
     glBegin(GL_LINES); 
     for(p=Statec->path; p != Statec->path->last; ) {
-      glVertex3f( (p->position.s.x)/255.0f, 0.0f, (p->position.s.y)/255.0f );
+      x = (p->position.s.x)/255.0f * 63.0f;
+      y = (p->position.s.y)/255.0f * 63.0f;
+      glVertex3f( (p->position.s.x)/255.0f, 
+		  Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.005,
+		  (p->position.s.y)/255.0f );
       p = p->next;
-      glVertex3f( (p->position.s.x)/255.0f, 0.0f, (p->position.s.y)/255.0f );
+      x = (p->position.s.x)/255.0f * 63.0f;
+      y = (p->position.s.y)/255.0f * 63.0f;
+      glVertex3f( (p->position.s.x)/255.0f, 
+		  Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.005,
+		  (p->position.s.y)/255.0f );
     }
     glEnd();
   }
@@ -140,13 +144,20 @@ static void DrawPath()
 
 static void DrawTowers()
 {
-  GLUquadric *sphere;
   float       r,color[4],white[4]={1.0f,1.0f,1.0f,1.0f};
-  int         i,j,slices,stacks;
+  int         i,x,y,slices,stacks;
+
+  static int         init=1;
+  static GLUquadric *qdrc;
+
+  if(init) {
+    // Init if needed
+    init = 0;
+    qdrc=gluNewQuadric();
+  }
 
   for(i=0; i<Statec->player.ntowers; i++) {
     // Draw a small sphere at the center of the tower
-    sphere=gluNewQuadric();
     slices = stacks = 32;
     r = 2 / 255.0f;
     color[0] = (Statec->player.towers[i].gem.color.a[0])/255.0f;
@@ -156,57 +167,65 @@ static void DrawTowers()
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, white);
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color);
     glPushMatrix();
+    x = (Statec->player.towers[i].position.s.x)/255.0f * 63.0f;
+    y = (Statec->player.towers[i].position.s.y)/255.0f * 63.0f;
     glTranslatef((Statec->player.towers[i].position.s.x)/255.0f,
-		 0.0f,
+		 Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.025,
 		 (Statec->player.towers[i].position.s.y)/255.0f);
-    gluSphere(sphere, r, slices , stacks);
+    gluSphere(qdrc, r, slices , stacks);
+    glPopMatrix();
+    glPushMatrix();
+    glTranslatef((Statec->player.towers[i].position.s.x)/255.0f,
+		 Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.025,
+		 (Statec->player.towers[i].position.s.y)/255.0f);
+    glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+    gluCylinder(qdrc, r/3.0f*2.0f, r/3.0f*2.0f, 0.03, slices, stacks);
     glPopMatrix();
   }
-
-  // Draw tower ranges
-  glEnable(GL_LINE_SMOOTH);
-  glBegin(GL_LINES);
-  for(i=0; i<Statec->player.ntowers; i++) {
-    color[0] = (Statec->player.towers[i].gem.color.a[0])/255.0f;
-    color[1] = (Statec->player.towers[i].gem.color.a[1])/255.0f;
-    color[2] = (Statec->player.towers[i].gem.color.a[2])/255.0f;
-    color[3] = 0.75f;
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, white);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color);
-    r = (Statec->player.towers[i].gem.range) / 255.0f;
-    for(j=0; j<32; ) {
-      glVertex3f((Statec->player.towers[i].position.s.x)/255.0f+r*cos(2*3.14159265*(j/31.0)), 0.0f,
-		 (Statec->player.towers[i].position.s.y)/255.0f+r*sin(2*3.14159265*(j/31.0)) );
-      j++;
-      glVertex3f((Statec->player.towers[i].position.s.x)/255.0f+r*cos(2*3.14159265*(j/31.0)), 0.0f, 
-		 (Statec->player.towers[i].position.s.y)/255.0f+r*sin(2*3.14159265*(j/31.0)) );
-    }
-  }
-  glEnd();
-  glDisable(GL_LINE_SMOOTH);
 }
 
 static void DrawEnemies()
 {
-  int i;
+  float r,color[4],white[4]={1.0f,1.0f,1.0f,1.0f};
+  int   i,x,y,slices,stacks;
+
+  static int         init=1;
+  static GLUquadric *qdrc;
+
+  if(init) {
+    // Init if needed
+    init = 0;
+    qdrc=gluNewQuadric();
+  }
 
   // Draw enemies
-  glBegin(GL_TRIANGLES);
   for(i=0; i<Statec->nenemies; i++) {
-    glColor3f( (Statec->enemies[i].color.a[0])/255.0f, 
-               (Statec->enemies[i].color.a[1])/255.0f,
-               (Statec->enemies[i].color.a[2])/255.0f  );
-    
-    glVertex3f((Statec->enemies[i].position.s.x+0)/255.0f, 0.0f, (Statec->enemies[i].position.s.y-2)/255.0f);
-    glVertex3f((Statec->enemies[i].position.s.x-2)/255.0f, 0.0f, (Statec->enemies[i].position.s.y+2)/255.0f);
-    glVertex3f((Statec->enemies[i].position.s.x+2)/255.0f, 0.0f, (Statec->enemies[i].position.s.y+2)/255.0f);
+    // Draw a small sphere at the center of the enemy
+    slices = stacks = 32;
+    r = 2 / 255.0f;
+    color[0] = (Statec->enemies[i].color.a[0])/255.0f;
+    color[1] = (Statec->enemies[i].color.a[1])/255.0f;
+    color[2] = (Statec->enemies[i].color.a[2])/255.0f;
+    color[3] = 0.75f;
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, white);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color);
+    glPushMatrix();
+    x = (Statec->enemies[i].position.s.x)/255.0f * 63.0f;
+    y = (Statec->enemies[i].position.s.y)/255.0f * 63.0f;
+    glTranslatef((Statec->enemies[i].position.s.x)/255.0f,
+		 Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.005,
+		 (Statec->enemies[i].position.s.y)/255.0f);
+    gluSphere(qdrc, r, slices , stacks);
+    glPopMatrix();
   }
-  glEnd();
 }
 
 static void DrawEvents(widget_t *w)
 {
   eventq_t *q,*t;
+  float     h,color[4];
+  float     white[4]={1.0f,1.0f,1.0f,1.0f},black[4]={0.0f,0.0f,0.0f,0.0f};
+  int       x,y; 
 
   // Draw everything on the event list
   for(q=gui_game_event_get(NULL); q; q=gui_game_event_get(q)) {
@@ -215,20 +234,43 @@ static void DrawEvents(widget_t *w)
     case GUI_GAME_EVENT_FIRE:
       // Tower fire event
       glEnable(GL_LINE_SMOOTH);
-      glColor3f( (q->fire.color.a[0])/256.0, 
-		 (q->fire.color.a[1])/256.0,
-		 (q->fire.color.a[2])/256.0  );
+      color[0] = (q->fire.color.a[0])/256.0f;
+      color[1] = (q->fire.color.a[1])/256.0f;
+      color[2] = (q->fire.color.a[2])/256.0f;
+      color[3] = 1.0f;
+      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, white);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
       glLineWidth(2.0f);
       glBegin(GL_LINES); 
-      glVertex3f((q->fire.tower.s.x)/255.0f, 0.0f, (q->fire.tower.s.y)/255.0f);
-      glVertex3f((q->fire.enemy.s.x)/255.0f, 0.0f, (q->fire.enemy.s.y)/255.0f);
+      x = (q->fire.tower.s.x)/255.0f * 63.0f;
+      y = (q->fire.tower.s.y)/255.0f * 63.0f;
+      h = Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.025;
+      glVertex3f((q->fire.tower.s.x)/255.0f, h, (q->fire.tower.s.y)/255.0f);
+      x = (q->fire.enemy.s.x)/255.0f * 63.0f;
+      y = (q->fire.enemy.s.y)/255.0f * 63.0f;
+      h = Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.005;
+      glVertex3f((q->fire.enemy.s.x)/255.0f, h, (q->fire.enemy.s.y)/255.0f);
       glEnd();
+      glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
       glLineWidth(1.0f);
       glDisable(GL_LINE_SMOOTH);
+      color[0] = 1.0f;
+      color[1] = 0.0f;
+      color[2] = 0.0f;
+      color[3] = 1.0f;
+      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, white);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
       glColor3f( 1.0f, 0.0f, 0.0f);
-      glRasterPos3f( ((q->fire.tower.s.x+q->fire.enemy.s.x)/2.0)/255.0f, 0.0f,
+      x = ((q->fire.tower.s.x+q->fire.enemy.s.x)/2.0)/255.0f * 63.0f;
+      y = ((q->fire.tower.s.y+q->fire.enemy.s.y)/2.0)/255.0f * 63.0f;
+      h = Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.01;
+      glRasterPos3f( ((q->fire.tower.s.x+q->fire.enemy.s.x)/2.0)/255.0f, 
+		     h,
 		     ((q->fire.tower.s.y+q->fire.enemy.s.y)/2.0)/255.0f );
       printGLf(w->glw->font,"%.0lf",q->fire.health);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
       // Remove if needed
       if( (Statec->time - q->time) > 20 ) {
 	t = q->last;
@@ -239,15 +281,25 @@ static void DrawEvents(widget_t *w)
     case GUI_GAME_EVENT_KILL:
       // Enemy death event
       glEnable(GL_LINE_SMOOTH);
-      glColor3f(1.0f, 0.0f, 0.0f); 
+      color[0] = 1.0f;
+      color[1] = 0.0f;
+      color[2] = 0.0f;
+      color[3] = 1.0f;
+      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, white);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
+      x = (q->kill.enemy.s.x)/255.0f * 63.0f;
+      y = (q->kill.enemy.s.y)/255.0f * 63.0f;
+      h = Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.005;
       glBegin(GL_LINES); 
-      glVertex3f((q->kill.enemy.s.x-2)/255.0f, 0.0f, (q->kill.enemy.s.y-2)/255.0f);
-      glVertex3f((q->kill.enemy.s.x+2)/255.0f, 0.0f, (q->kill.enemy.s.y+2)/255.0f);
-      glVertex3f((q->kill.enemy.s.x+2)/255.0f, 0.0f, (q->kill.enemy.s.y-2)/255.0f);
-      glVertex3f((q->kill.enemy.s.x-2)/255.0f, 0.0f, (q->kill.enemy.s.y+2)/255.0f);
-      glVertex3f((q->kill.enemy.s.x)/255.0f, -2.0f/255.0f, (q->kill.enemy.s.y)/255.0f);
-      glVertex3f((q->kill.enemy.s.x)/255.0f,  2.0f/255.0f, (q->kill.enemy.s.y)/255.0f);
+      glVertex3f((q->kill.enemy.s.x-4)/255.0f, h, (q->kill.enemy.s.y-4)/255.0f);
+      glVertex3f((q->kill.enemy.s.x+4)/255.0f, h, (q->kill.enemy.s.y+4)/255.0f);
+      glVertex3f((q->kill.enemy.s.x+4)/255.0f, h, (q->kill.enemy.s.y-4)/255.0f);
+      glVertex3f((q->kill.enemy.s.x-4)/255.0f, h, (q->kill.enemy.s.y+4)/255.0f);
+      glVertex3f((q->kill.enemy.s.x)/255.0f, h-4.0f/255.0f, (q->kill.enemy.s.y)/255.0f);
+      glVertex3f((q->kill.enemy.s.x)/255.0f, h+4.0f/255.0f, (q->kill.enemy.s.y)/255.0f);
       glEnd();
+      glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
       glDisable(GL_LINE_SMOOTH);
       // Remove if needed
       if( (Statec->time - q->time) > 250 ) {
@@ -306,13 +358,6 @@ void Gameframe_Draw(widget_t *w)
 
   // Draw towers
   DrawTowers();
-  
-  // !!av:
-  // Disable lighting
-  glDisable(GL_LIGHTING);
-  glDisable(GL_LIGHT0);
-  glEnable(GL_LINE_SMOOTH);
-  glBegin(GL_LINES); 
 
   // Draw enemy path
   DrawPath();
@@ -322,6 +367,10 @@ void Gameframe_Draw(widget_t *w)
 
   // Draw / handle game events
   DrawEvents(w);
+
+  // Disable lighting
+  glDisable(GL_LIGHTING);
+  glDisable(GL_LIGHT0);
 
   // Restore 2D mode to draw 2D stuffs
   ViewPort2D(w->glw);

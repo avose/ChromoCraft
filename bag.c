@@ -41,4 +41,6 @@ u32b_t bag_add_gem(bag_t *bag, gem_t *gem)
     memcpy(&bag->items[slot].gem, gem, sizeof(gem_t));
   }
 
+  // !!av: ??
+  return 0;
 }
