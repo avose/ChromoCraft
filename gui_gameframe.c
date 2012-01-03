@@ -16,6 +16,8 @@
 #include <GL/glx.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <AL/al.h>
+#include <AL/alut.h>
 #include <pthread.h>
 #include <math.h> 
 #include <signal.h>
@@ -29,6 +31,53 @@
 #include "gui_gameframe.h"
 
 #include "io_bitmap.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+#define AL_FIRE al_sources[0]
+#define AL_KILL al_sources[1]
+
+#define NUM_BUFFERS 2
+#define NUM_SOURCES 2
+#define NUM_ENVIRONMENTS 1
+
+ALfloat   al_listenerPos[]={0.0,0.0,4.0};
+ALfloat   al_listenerVel[]={0.0,0.0,0.0};
+ALfloat   al_listenerOri[]={0.0,0.0,1.0, 0.0,1.0,0.0};
+ALfloat   al_source0Pos[]={ -2.0, 0.0, 0.0};
+ALfloat   al_source0Vel[]={ 0.0, 0.0, 0.0};
+ALuint    al_buffers[NUM_BUFFERS];
+ALuint    al_sources[NUM_SOURCES];
+
+static void initoal()
+{
+  int i;
+
+  alListenerfv(AL_POSITION,    al_listenerPos);
+  alListenerfv(AL_VELOCITY,    al_listenerVel);
+  alListenerfv(AL_ORIENTATION, al_listenerOri);
+
+  // Load data file
+  al_buffers[0] = alutCreateBufferFromFile("data/wav/fire.wav");
+  al_buffers[1] = alutCreateBufferFromFile("data/wav/kill.wav");
+
+  // Get sources
+  alGetError();
+  alGenSources(NUM_SOURCES, al_sources);
+  if( alGetError() != AL_NO_ERROR ) {
+    Error("initoal(): Error creating sources!\n");
+  } 
+
+  // Setup sources
+  for(i=0; i<NUM_SOURCES; i++) {
+    alSourcef(al_sources[i],  AL_PITCH,    1.0f);
+    alSourcef(al_sources[i],  AL_GAIN,     1.0f);
+    alSourcefv(al_sources[i], AL_POSITION, al_source0Pos);
+    alSourcefv(al_sources[i], AL_VELOCITY, al_source0Vel);
+    alSourcei(al_sources[i],  AL_BUFFER,   al_buffers[i]);
+    alSourcei(al_sources[i],  AL_LOOPING,  AL_FALSE);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -227,12 +276,24 @@ static void DrawEvents(widget_t *w)
   float     white[4]={1.0f,1.0f,1.0f,1.0f},black[4]={0.0f,0.0f,0.0f,0.0f};
   int       x,y; 
 
+  static int init=1;
+
+  if( init ) {
+    // Init if needed
+    init = 0;
+    initoal();
+  }
+
   // Draw everything on the event list
   for(q=gui_game_event_get(NULL); q; q=gui_game_event_get(q)) {
     // Find event type
     switch(q->type) {
     case GUI_GAME_EVENT_FIRE:
       // Tower fire event
+      if( !q->flags ) {
+	alSourcePlay(AL_FIRE);
+	q->flags = 1;
+      }
       glEnable(GL_LINE_SMOOTH);
       color[0] = (q->fire.color.a[0])/256.0f;
       color[1] = (q->fire.color.a[1])/256.0f;
@@ -280,6 +341,10 @@ static void DrawEvents(widget_t *w)
       break;
     case GUI_GAME_EVENT_KILL:
       // Enemy death event
+      if( !q->flags ) {
+	alSourcePlay(AL_KILL);
+	q->flags = 1;
+      }
       glEnable(GL_LINE_SMOOTH);
       color[0] = 1.0f;
       color[1] = 0.0f;

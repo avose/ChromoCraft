@@ -17,6 +17,7 @@ typedef struct str_eventq_node_t {
   struct str_eventq_node_t *next;
   
   u32b_t type;    // Type of event (can use to pull out of union below)
+  u32b_t flags;   // Event flags (unique use for each event type)
   u64b_t time;    // Time (in game ticks) this event occurred
   
   union {

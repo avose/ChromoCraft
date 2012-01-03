@@ -3,11 +3,11 @@ OPTS= -std=gnu99
 
 # Debug options
 GCFLAGS= -g -Wall
-GLIBS=   -lm -lpthread -lGL -lGLU -lX11
+GLIBS=   -lm -lpthread -lGL -lGLU -lX11 -lopenal -lalut
 
 # Release options
 CFLAGS= -O3 -Wall
-LIBS=   -lm -lpthread -lGL -lGLU -lX11
+LIBS=   -lm -lpthread -lGL -lGLU -lX11 -lopenal -lalut
 
 all: chromo_craft
 

@@ -3,6 +3,8 @@
 #include <string.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <AL/al.h>
+#include <AL/alut.h>
 
 #include "types.h"
 #include "util.h"
@@ -364,6 +366,9 @@ static void game_loop()
 
 int main(int argc, char *argv[])
 {
+  // Init sound support
+  alutInit(&argc, argv);
+
   // Get ready to do stuffs...
   init_state();
 
