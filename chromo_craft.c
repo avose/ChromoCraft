@@ -191,7 +191,7 @@ static void add_some_path()
   State->path = path_new_path(&v);
 
   // Add some random positions onto the path linked list
-  n = 4 + random_rnd(&State->random,10);
+  n = 4 + random_rnd(&State->random,6);
   while(n--) {
     // Find a random position for this node
     v.s.x = random_rnd(&State->random,256);
@@ -246,7 +246,7 @@ static void update_enemy_effects()
 
 }
 
-#define BASE_SPEED 0.025
+#define BASE_SPEED 0.020
 
 static void update_enemies_path()
 {
@@ -292,6 +292,8 @@ static void update_towers()
   // Officially kill all those with negative health
   for(i=0; i<State->nenemies; ) {
     if( State->enemies[i].health < 0 ) {
+      // Add points to score
+      State->player.score += State->enemies[i].base_health;
       // Notify GUI of the death
       gui_game_event_kill(State->time,&State->enemies[i]);
       // Kill it (will move last entry into current; retest current
@@ -303,10 +305,19 @@ static void update_towers()
   }
 }
 
+static void update_player()
+{
+  State->player.mana += 0.001;
+  if( State->player.mana > State->player.base_mana ) {
+    State->player.mana = State->player.base_mana;
+  }
+}
+
 void tick()
 {
   update_enemies();
   update_towers();
+  update_player();
 }
 
 u64b_t get_time()
@@ -337,8 +348,8 @@ static void game_loop()
 
   while( (State->time = ++ticks) ) {
 
-    if( !(ticks%3000) ) {
-      add_some_enemies(100);
+    if( !(ticks%10000) ) {
+      add_some_enemies(75);
     }
 
     // Progress the game one time step

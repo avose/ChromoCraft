@@ -36,8 +36,14 @@ void Stats_Draw(widget_t *w)
 
   // Draw the mana info:
   Purple();
-  sprintf(buf,"Mana:  %.1lf/%.1lf",Statec->player.mana,Statec->player.base_mana);
+  sprintf(buf,"Score:  %.1lf",Statec->player.score);
   glRasterPos2f(0.1f, 0.1f);
+  printGLf(w->glw->font,"%s",buf);
+
+  // Draw the mana info:
+  Purple();
+  sprintf(buf,"Mana:  %.1lf/%.1lf",Statec->player.mana,Statec->player.base_mana);
+  glRasterPos2f(0.1f, 0.2f);
   printGLf(w->glw->font,"%s",buf);
 
   // Outline

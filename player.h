@@ -16,6 +16,8 @@ typedef struct {
   u32b_t   stowers;      // Size of tower array
 
   bag_t    bag;          // Inventory
+
+  double   score;        // Player score (points)
 } player_t;
 
 ////////////////////////////////////////////////////////////

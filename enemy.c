@@ -192,7 +192,7 @@ void enemy_new_wave(vector3_t *color, const double time, rnd_t *random, enemy_t 
     enemy.health = enemy.base_health = color_area(&enemy.color);
 
     // The speed of the enemy will be [10,100] based on color area
-    enemy.speed = (color_area(&enemy.color)/COLOR_MAX_AREA*90.0) + 10.0;
+    enemy.speed = (color_area(&enemy.color)/COLOR_MAX_AREA*50.0) + 5.0;
 
     // Set the start time for correct wave spacing
     enemy.start_time = wave_start_time + enemy_spacing*i;

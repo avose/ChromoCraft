@@ -5,6 +5,14 @@
 ////////////////////////////////////////////////////////////
 // For all files
 
+#define GGF_KILL_TIME       (200.0f)
+#define GGF_KILL_LIGHT_TIME (100.0f)
+#define GGF_FIRE_TIME       (14.0f)
+#define GGF_FIRE_LIGHT_TIME (14.0f)
+
+#define GGF_GEM_SLICES 16
+#define GGF_GEM_STACKS 16
+
 #include "types.h"
 #include "io_bitmap.h"
 

@@ -27,6 +27,7 @@
 #include "gui_button.h"
 #include "gui_gameframe.h"
 #include "gui_bag.h"
+#include "gui_stats.h"
 
 #include "io_bitmap.h"
 
@@ -301,6 +302,7 @@ static void LayoutWidgets(glwindow_t *glw)
   static button_gui_t    bquit = {"Quit", 0, 0, NULL};
   static gameframe_gui_t gf;
   static bag_gui_t       bag;
+  static stats_gui_t     stats;
 
   // Main game frame
   memset(&gf,0,sizeof(gf));
@@ -314,6 +316,9 @@ static void LayoutWidgets(glwindow_t *glw)
 
   // Bag / Intentory
   AddWidget(glw, 768, (768-16)/2, 128-8, (768-16)/2, Bag_Draw, NULL, Bag_Down, NULL, NULL, NULL, &bag);
+
+  // Status / info widget
+  AddWidget(glw, 768, (768-16)/4, 128-8, (768-16)/4-8, Stats_Draw, NULL, NULL, NULL, NULL, NULL, &stats);
 
   // Buttons
   AddWidget(glw, 768, 8, 128-8,  24, Button_Draw,    NULL, Quit_Down,    NULL, NULL, NULL,  &bquit);
