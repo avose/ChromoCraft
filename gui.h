@@ -2,6 +2,10 @@
 #define GUI_H
 
 #include <pthread.h>
+
+#include <AL/al.h>
+#include <AL/alut.h>
+
 #include "types.h"
 #include "path.h"
 #include "random.h"
@@ -139,6 +143,13 @@ extern void Green();
 extern float ScaleX(widget_t *w, const float x);
 extern float ScaleY(widget_t *w, const float y);
 extern void  GuiExit();
+
+#define NUM_SOURCES 3
+extern ALuint al_sources[NUM_SOURCES];
+#define AL_MUSIC al_sources[0]
+#define AL_FIRE  al_sources[1]
+#define AL_KILL  al_sources[2]
+
 
 #endif // GUI_WIDGET
 #endif // !GUI_C

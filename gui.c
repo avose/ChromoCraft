@@ -46,6 +46,69 @@ pthread_mutex_t   StateLock=PTHREAD_MUTEX_INITIALIZER;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+#define AL_MUSIC al_sources[0]
+#define AL_FIRE  al_sources[1]
+#define AL_KILL  al_sources[2]
+
+#define NUM_BUFFERS 3
+#define NUM_SOURCES 3
+#define NUM_ENVIRONMENTS 1
+
+ALfloat al_listenerPos[]={0.0,0.0,4.0};
+ALfloat al_listenerVel[]={0.0,0.0,0.0};
+ALfloat al_listenerOri[]={0.0,0.0,1.0, 0.0,1.0,0.0};
+
+ALfloat al_source0Pos[]={ -2.0, 0.0, 0.0};
+ALfloat al_source0Vel[]={  0.0, 0.0, 0.0};
+ALuint  al_buffers[NUM_BUFFERS];
+ALuint  al_sources[NUM_SOURCES];
+
+
+static void initoal()
+{
+  int i;
+
+
+  // Set position, velocity, etc.
+  alListenerfv(AL_POSITION,    al_listenerPos);
+  alListenerfv(AL_VELOCITY,    al_listenerVel);
+  alListenerfv(AL_ORIENTATION, al_listenerOri);
+
+  // Load data files
+  al_buffers[0] = alutCreateBufferFromFile("data/wav/ninja2.wav");
+  al_buffers[1] = alutCreateBufferFromFile("data/wav/fire.wav");
+  al_buffers[2] = alutCreateBufferFromFile("data/wav/kill.wav");
+
+  // Get sources
+  alGetError();
+  alGenSources(NUM_SOURCES, al_sources);
+  if( alGetError() != AL_NO_ERROR ) {
+    Error("initmusic(): Error creating sources!\n");
+  } 
+
+  // Setup sources
+  for(i=0; i<NUM_SOURCES; i++) {
+    alSourcef(al_sources[i],  AL_PITCH,    1.0f);
+    alSourcef(al_sources[i],  AL_GAIN,     1.0f);
+    alSourcefv(al_sources[i], AL_POSITION, al_source0Pos);
+    alSourcefv(al_sources[i], AL_VELOCITY, al_source0Vel);
+    alSourcei(al_sources[i],  AL_BUFFER,   al_buffers[i]);
+    if( !i ) {
+      alSourcei(al_sources[i],  AL_LOOPING,  AL_TRUE);
+    } else {
+      alSourcei(al_sources[i],  AL_LOOPING,  AL_FALSE);
+    }
+  }
+
+  // Start playing music
+  alSourcePlay(AL_MUSIC);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 //
 // All of these are exported and made available to widgets in other files
 //
@@ -395,7 +458,10 @@ static void *EventHandler(void *arg)
   timeval_t  slice, now, end, period;
   fd_set     in_fds, out_fds;
   int        x11_fd,i;
-
+  
+  // Init OpenAL system
+  initoal();
+  
   // Initialize the window
   sprintf(title,"ChromoCraft - %s", Version);
   glw.pwidth  = 768+128+1;

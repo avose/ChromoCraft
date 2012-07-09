@@ -40,53 +40,6 @@ static int  gl_maxlights;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define AL_FIRE al_sources[0]
-#define AL_KILL al_sources[1]
-
-#define NUM_BUFFERS 2
-#define NUM_SOURCES 2
-#define NUM_ENVIRONMENTS 1
-
-static ALfloat al_listenerPos[]={0.0,0.0,4.0};
-static ALfloat al_listenerVel[]={0.0,0.0,0.0};
-static ALfloat al_listenerOri[]={0.0,0.0,1.0, 0.0,1.0,0.0};
-static ALfloat al_source0Pos[]={ -2.0, 0.0, 0.0};
-static ALfloat al_source0Vel[]={ 0.0, 0.0, 0.0};
-static ALuint  al_buffers[NUM_BUFFERS];
-static ALuint  al_sources[NUM_SOURCES];
-
-static void initoal()
-{
-  int i;
-
-  alListenerfv(AL_POSITION,    al_listenerPos);
-  alListenerfv(AL_VELOCITY,    al_listenerVel);
-  alListenerfv(AL_ORIENTATION, al_listenerOri);
-
-  // Load data file
-  al_buffers[0] = alutCreateBufferFromFile("data/wav/fire.wav");
-  al_buffers[1] = alutCreateBufferFromFile("data/wav/kill.wav");
-
-  // Get sources
-  alGetError();
-  alGenSources(NUM_SOURCES, al_sources);
-  if( alGetError() != AL_NO_ERROR ) {
-    Error("initoal(): Error creating sources!\n");
-  } 
-
-  // Setup sources
-  for(i=0; i<NUM_SOURCES; i++) {
-    alSourcef(al_sources[i],  AL_PITCH,    1.0f);
-    alSourcef(al_sources[i],  AL_GAIN,     1.0f);
-    alSourcefv(al_sources[i], AL_POSITION, al_source0Pos);
-    alSourcefv(al_sources[i], AL_VELOCITY, al_source0Vel);
-    alSourcei(al_sources[i],  AL_BUFFER,   al_buffers[i]);
-    alSourcei(al_sources[i],  AL_LOOPING,  AL_FALSE);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 // Button callbacks
 
 void Gameframe_Down(widget_t *w, const int x, const int y, const int b)
@@ -468,6 +421,7 @@ static void DrawEnemies()
   }
 }
 
+
 static void DrawEvents(widget_t *w)
 {
   eventq_t *q,*t;
@@ -483,8 +437,6 @@ static void DrawEvents(widget_t *w)
   if( init ) {
     // Init if needed
     init = 0;
-    // Sound init
-    initoal();
     // For drawing 3D "primitives"
     qdrc=gluNewQuadric();
   }
