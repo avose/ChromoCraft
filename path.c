@@ -7,7 +7,7 @@
 #include "path.h"
 
 // Appends a node to the end of the path linked list
-void path_new_node(path_t *path, vector3_t *position)
+path_node_t *path_new_node(path_t *path, vector3_t *position)
 {
   path_node_t *node;
 
@@ -24,6 +24,8 @@ void path_new_node(path_t *path, vector3_t *position)
   // Insert the node
   path->last->next = node;
   path->last       = node;
+
+  return node;
 }
 
 path_t* path_new_path(vector3_t *position)

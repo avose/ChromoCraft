@@ -14,7 +14,7 @@ typedef struct str_path_node_t {
 // Interface
 ////////////////////////////////////////////////////////////
 #ifndef PATH_C
-extern void    path_new_node(path_t *path, vector3_t *position);
+extern path_node_t* path_new_node(path_t *path, vector3_t *position);
 extern path_t* path_new_path(vector3_t *position);
 #endif
 

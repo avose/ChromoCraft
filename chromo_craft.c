@@ -14,6 +14,7 @@
 #include "effect.h"
 #include "gem.h"
 #include "enemy.h"
+#include "path.h"
 #include "special.h"
 #include "tower.h"
 #include "player.h"
@@ -24,12 +25,67 @@
 
 static state_t *State;
 
+#define TERRAIN_SIZE  64
+#define TERRAIN_SCALE 4
+
+static path_t *load_path_file(char *fn)
+{
+  io_bitmap_t  bm;
+  path_t      *p;
+  vector3_t    node[256];
+  int          i, j;
+  u8b_t        n;
+
+  io_bitmap_load(fn, &bm);
+
+  // Load image of node positions
+  if( bm.w != bm.h || bm.w != TERRAIN_SIZE ) {
+    Error("Path bitmap must be %dx%d in size.\n", TERRAIN_SIZE, TERRAIN_SIZE);
+  }
+
+  // Initialize positions to bogus values
+  for( i = 0; i < 256; ++i ) {
+    node[i].s.x = -1.0f;
+    node[i].s.y = -1.0f;
+    node[i].s.z = 0.0f;
+  }
+
+  // Scan image and store positions
+  for( j = 0; j < bm.h; ++j ) {
+    for( i = 0; i < bm.w; ++i ) {
+      n = bm.d[(j*TERRAIN_SIZE + i) * 3];
+      node[n].s.x = i * TERRAIN_SCALE;
+      node[n].s.y = j * TERRAIN_SCALE;
+    }
+  }
+
+  // Now build linked list out of valid positions (Skip v=0)
+  p = NULL;
+  for( i = 1; i < 256; ++i ) {
+    // Add the node if the position is valid
+    if (node[i].s.x > -1.0f && node[i].s.y > -1.0f) {
+      // FIXME: It'd be nice to create a path with no nodes,
+      // versus this condition
+      if (p) {
+	path_new_node(p, node+i);
+      } else {
+	p = path_new_path(node+i);
+      }
+    }
+  }
+  
+  io_bitmap_free(&bm);
+
+  return p;
+}
+
 ////////////////////////////////////////////////////////////
 // Sets up the global state to get ready for play
 ////////////////////////////////////////////////////////////
 static void init_state()
 {
   struct timeval tv;
+
   
   // Allocate the main state structure
   if( !(State=malloc(sizeof(state_t))) ) {
@@ -41,7 +97,7 @@ static void init_state()
 
   // Initialize the random number generator
   if( gettimeofday(&tv, NULL) == -1 ) {
-    Warn("gettiemofday() failed; seeding random generator with 7 instead.\n");
+    Warn("gettimeofday() failed; seeding random generator with 7 instead.\n");
     random_initrand(&State->random,7);
   } else {
     random_initrand(&State->random,tv.tv_usec);
@@ -52,8 +108,8 @@ static void init_state()
 
   // Load the terrain heightmap
   io_bitmap_load("data/bmp/hm.bmp", &(State->terrain));
-  if( (State->terrain.w != State->terrain.h) || (State->terrain.w != 64) ) {
-    Error("Terrain heightmap bitmap must be 64x64 in size.\n");
+  if( (State->terrain.w != State->terrain.h) || (State->terrain.w != TERRAIN_SIZE) ) {
+    Error("Terrain heightmap bitmap must be %dx%d in size.\n", TERRAIN_SIZE, TERRAIN_SIZE);
   }
 
   // Set the player up as level 1
@@ -335,7 +391,7 @@ static void game_loop()
   u64b_t         t1,t2,sleep;
 
   // Set a path for enemies ...
-  add_some_path();
+  State->path = load_path_file("data/bmp/path.bmp");
 
   // Add some stuff ...
   add_some_towers(20,255);

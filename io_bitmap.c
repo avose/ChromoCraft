@@ -52,7 +52,7 @@ void io_bitmap_load(char *fn, io_bitmap_t *bmp)
   // Read position of actual bitmap data
   fseek(f, 8, SEEK_CUR);
   if ( !fread(&data_offset, sizeof(u32b_t), 1, f) ) {
-    Error("io_bitmap_load(): Filed to read pixel data offset (%s).\n",fn);
+    Error("io_bitmap_load(): Failed to read pixel data offset (%s).\n",fn);
   }
 
   // Read the width and height of the bitmap
