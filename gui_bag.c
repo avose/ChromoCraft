@@ -33,9 +33,44 @@
 
 void Bag_Down(widget_t *w, const int x, const int y, const int b)
 {
+  gem_t  *gem = NULL;
+  int     i,ndx;
+  float   xf,yf,xs,ys,d,md = 1000000.0f;
+
   if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
       (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
-    //GuiExit();
+    // Find the closest gem to the mouse.
+    for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
+      switch(Statec->player.bag.items[i].type) {
+      case BAG_ITEM_TYPE_GEM:
+	// Find position of the gem
+	xf  = i%3 + (2.0f/(3.0f*2.0f)); 
+	xf /= 3.0f;
+	yf  = i/3 + (2.0f/(3.0f*2.0f)); 
+	yf /= 15.0f;
+	xs  = ScaleX(w,xf*w->w+w->x);
+	ys  = ScaleY(w,yf*w->h+w->y);
+	// Get distance to mouse
+	d = sqrt((xs-x)*(xs-x) + (ys-y)*(ys-y));
+	if( d < md ) {
+	  ndx = i;
+	  md  = d;
+	  gem = &(Statec->player.bag.items[i].gem);
+	}
+	break;
+      }
+    }
+
+    // Pick up the gem.
+    if( gem ) {
+      memcpy(&(Statec->player.mouse_gem),gem,sizeof(gem_t));
+      bag_remove_item(&(Statec->player.bag), ndx);
+      printf("Picked up gem[%d] with color (%lf,%lf,%lf).\n",
+	     ndx,
+	     gem->color.a[0],
+	     gem->color.a[1],
+	     gem->color.a[2] );
+    }
   }
 }
 
@@ -46,13 +81,17 @@ void Bag_Draw(widget_t *w)
   //bag_gui_t *gf = (bag_gui_t*)w->wd;
 
   u32b_t i,j,x,y;
-  double r,ratio=w->w/((double)w->h);
+  double r,xf,yf,ratio=w->w/((double)w->h);
 
   // Draw the items
   for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
     // Find position of items
-    x = i%4;
-    y = i/4;
+    x  = i%3;
+    xf = x + (2.0f/(3.0f*2.0f)); 
+    xf /= 3.0;
+    y  = i/3;
+    yf = y + (2.0f/(3.0f*2.0f)); 
+    yf /= 15.0;
     // Figure out item type
     switch(Statec->player.bag.items[i].type) {
     case BAG_ITEM_TYPE_GEM:
@@ -61,25 +100,25 @@ void Bag_Draw(widget_t *w)
       glColor3f(1.0f, 1.0f, 1.0f); 
       r = 20 / 255.0;
       for(j=0; j<6; ) {
-	glVertex3f((x)/3.0+r*cos(2*3.14159265*(j/5.0)), 
-		   (y)/15.0+r*ratio*sin(2*3.14159265*(j/5.0)), 1.0f );
+	glVertex3f(xf+r*cos(2*3.14159265*(j/5.0)), 
+		   yf+r*ratio*sin(2*3.14159265*(j/5.0)), 1.0f );
 	j++;
-	glVertex3f((x)/3.0+r*cos(2*3.14159265*(j/5.0)), 
-		   (y)/15.0+r*ratio*sin(2*3.14159265*(j/5.0)), 1.0f );
+	glVertex3f(xf+r*cos(2*3.14159265*(j/5.0)), 
+		   yf+r*ratio*sin(2*3.14159265*(j/5.0)), 1.0f );
       }
       glEnd();
       glBegin(GL_POLYGON);
-      // Tower center
+      // Gem center
       glColor3f( (Statec->player.bag.items[i].gem.color.a[0])/255.0, 
 		 (Statec->player.bag.items[i].gem.color.a[1])/255.0,
 		 (Statec->player.bag.items[i].gem.color.a[2])/255.0  );
       r = 16 / 255.0;
       for(j=0; j<6; ) {
-	glVertex2f((x)/3.0+r*cos(2*3.14159265*(j/5.0)), 
-		   (y)/15.0+r*ratio*sin(2*3.14159265*(j/5.0))  );
+	glVertex2f(xf+r*cos(2*3.14159265*(j/5.0)), 
+		   yf+r*ratio*sin(2*3.14159265*(j/5.0))  );
 	j++;
-	glVertex2f((x)/3.0+r*cos(2*3.14159265*(j/5.0)), 
-		   (y)/15.0+r*ratio*sin(2*3.14159265*(j/5.0))  );
+	glVertex2f(xf+r*cos(2*3.14159265*(j/5.0)), 
+		   yf+r*ratio*sin(2*3.14159265*(j/5.0))  );
       }
       glEnd();
       break;

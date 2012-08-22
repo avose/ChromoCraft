@@ -46,6 +46,10 @@ void Gameframe_Down(widget_t *w, const int x, const int y, const int b)
 {
   if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
       (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
+    // !!av:
+    // Project all towers from 3D coords to 2D
+    // Select closest tower within a radius of the mouse position
+    // If the tower has a gem, start dragging the gem
   }
 }
 
