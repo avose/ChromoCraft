@@ -428,12 +428,12 @@ static void DrawEnemies()
 
 static void DrawEvents(widget_t *w)
 {
-  eventq_t *q,*t;
-  float     h,r,color[4];
-  float     white[4]={1.0f,1.0f,1.0f,1.0f},black[4]={0.0f,0.0f,0.0f,0.0f};
-  int       i,x,y,slices=GGF_GEM_SLICES,stacks=GGF_GEM_STACKS; 
-  GLfloat   light_position[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-  GLfloat   light_color[]    = { 1.0f, 1.0f, 1.0f, 1.0f };
+  gui_eventq_t *q,*t;
+  float         h,r,color[4];
+  float         white[4]={1.0f,1.0f,1.0f,1.0f},black[4]={0.0f,0.0f,0.0f,0.0f};
+  int           i,x,y,slices=GGF_GEM_SLICES,stacks=GGF_GEM_STACKS; 
+  GLfloat       light_position[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+  GLfloat       light_color[]    = { 1.0f, 1.0f, 1.0f, 1.0f };
 
   static int         init=1;
   static GLUquadric *qdrc;

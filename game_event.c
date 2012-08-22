@@ -6,22 +6,22 @@
 #include "gem.h"
 #include "enemy.h"
 #include "util.h"
-#define GUI_GAME_EVENT
-#include "gui_game_event.h"
+#define GAME_EVENT
+#include "game_event.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
-static void          gui_game_event_new_node  (gui_eventq_t *eventq);
-static gui_eventq_t* gui_game_event_new_eventq();
+static void           game_event_new_node  (game_eventq_t *eventq);
+static game_eventq_t* game_event_new_eventq();
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
 // Main event q
-static gui_eventq_t    *Events;
+static game_eventq_t   *Events;
 static pthread_mutex_t  EventLock=PTHREAD_MUTEX_INITIALIZER;
 
 
@@ -31,30 +31,30 @@ static pthread_mutex_t  EventLock=PTHREAD_MUTEX_INITIALIZER;
 
 
 // Allocates initial event q
-static void gui_game_event_init()
+static void game_event_init()
 {
   pthread_mutex_lock(&EventLock);
 
   // One time allocation
   if( !Events ) {
-    Events = gui_game_event_new_eventq();
+    Events = game_event_new_eventq();
   }
 
   pthread_mutex_unlock(&EventLock);
 }
 
-// Appends a node to the end of the gui_game_event linked list
-static void gui_game_event_new_node(gui_eventq_t *eventq)
+// Appends a node to the end of the game_event linked list
+static void game_event_new_node(game_eventq_t *eventq)
 {
-  gui_eventq_node_t *node;
+  game_eventq_node_t *node;
 
   // Allocate a new eventq node
-  if( !(node=malloc(sizeof(gui_eventq_node_t))) ) {
-    Error("Failed to allocate space (%u) for new eventq node.\n",sizeof(gui_eventq_node_t));
+  if( !(node=malloc(sizeof(game_eventq_node_t))) ) {
+    Error("Failed to allocate space (%u) for new eventq node.\n",sizeof(game_eventq_node_t));
   }
 
   // Setup the new node for insertion
-  memset(node,0,sizeof(gui_eventq_node_t));
+  memset(node,0,sizeof(game_eventq_node_t));
   node->next = eventq;
   node->last = eventq->last;
 
@@ -63,15 +63,15 @@ static void gui_game_event_new_node(gui_eventq_t *eventq)
   eventq->last       = node;
 }
 
-static gui_eventq_t* gui_game_event_new_eventq()
+static game_eventq_t* game_event_new_eventq()
 {
-  gui_eventq_t *eventq;
+  game_eventq_t *eventq;
 
   // Allocate eventq
-  if( !(eventq=malloc(sizeof(gui_eventq_t))) ) {
-    Error("Failed to allocate space (%u) for new eventq.\n",sizeof(gui_eventq_t));
+  if( !(eventq=malloc(sizeof(game_eventq_t))) ) {
+    Error("Failed to allocate space (%u) for new eventq.\n",sizeof(game_eventq_t));
   }
-  memset(eventq,0,sizeof(gui_eventq_t));
+  memset(eventq,0,sizeof(game_eventq_t));
   eventq->next = eventq;
   eventq->last = eventq;
 
@@ -84,9 +84,9 @@ static gui_eventq_t* gui_game_event_new_eventq()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-gui_eventq_t* gui_game_event_get(gui_eventq_t *node)
+game_eventq_t* game_event_get(game_eventq_t *node)
 {
-  gui_game_event_init();
+  game_event_init();
 
   // Set a current if none
   if( !node ) {
@@ -110,9 +110,9 @@ gui_eventq_t* gui_game_event_get(gui_eventq_t *node)
   return node;
 }
 
-void gui_game_event_remove(gui_eventq_t *node)
+void game_event_remove(game_eventq_t *node)
 {
-  gui_game_event_init();
+  game_event_init();
 
   pthread_mutex_lock(&EventLock);
 
@@ -138,35 +138,18 @@ void gui_game_event_remove(gui_eventq_t *node)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void gui_game_event_kill(u64b_t time, enemy_t *enemy)
+void game_event_tower_install_gem(tower_t *tower, u32b_t ndx)
 {
-  gui_game_event_init();
+  game_event_init();
 
   // Fill in new node
   pthread_mutex_lock(&EventLock);
 
-  gui_game_event_new_node(Events);
-  Events->last->type = GUI_GAME_EVENT_KILL;
-  vector3_copy(&enemy->position, &Events->last->kill.enemy);
-  Events->last->time = time;
+  game_event_new_node(Events);
+  Events->last->type = GAME_EVENT_TOWER_INSTALL_GEM;
+  Events->last->tower_install_gem.ndx = ndx;
+  vector3_copy(&(tower->position), &(Events->last->tower_install_gem.tpos));
   
   pthread_mutex_unlock(&EventLock);
 }
 
-void gui_game_event_fire(u64b_t time, tower_t *tower, enemy_t *enemy, double dmg)
-{
-  gui_game_event_init();
-
-  // Fill in new node
-  pthread_mutex_lock(&EventLock);
-
-  gui_game_event_new_node(Events);
-  Events->last->type = GUI_GAME_EVENT_FIRE;
-  vector3_copy(&tower->position,  &Events->last->fire.tower);
-  vector3_copy(&enemy->position,  &Events->last->fire.enemy);
-  vector3_copy(&tower->gem.color, &Events->last->fire.color);
-  Events->last->fire.health = dmg;
-  Events->last->time        = time;
-  
-  pthread_mutex_unlock(&EventLock);
-}

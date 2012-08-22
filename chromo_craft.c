@@ -21,6 +21,7 @@
 #define CHROMO_CRAFT_C
 #include "chromo_craft.h"
 #include "gui.h"
+#include "game_event.h"
 #include "gui_game_event.h"
 
 static state_t *State;

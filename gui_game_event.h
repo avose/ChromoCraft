@@ -12,9 +12,9 @@
 #define GUI_GAME_EVENT_KILL 2
 
 // Event queue node/queue
-typedef struct str_eventq_node_t {
-  struct str_eventq_node_t *last;
-  struct str_eventq_node_t *next;
+typedef struct str_gui_eventq_node_t {
+  struct str_gui_eventq_node_t *last;
+  struct str_gui_eventq_node_t *next;
   
   u32b_t type;    // Type of event (can use to pull out of union below)
   u32b_t flags;   // Event flags (unique use for each event type)
@@ -33,7 +33,7 @@ typedef struct str_eventq_node_t {
       vector3_t enemy;
     } kill;
   };
-} eventq_node_t, eventq_t;
+} gui_eventq_node_t, gui_eventq_t;
 
 
 ////////////////////////////////////////////////////////////
@@ -41,8 +41,8 @@ typedef struct str_eventq_node_t {
 ////////////////////////////////////////////////////////////
 #ifndef GUI_GAME_EVENT_C
 // Consumers
-extern eventq_t* gui_game_event_get   (eventq_t *node);
-extern void      gui_game_event_remove(eventq_t *node);
+extern gui_eventq_t* gui_game_event_get   (gui_eventq_t *node);
+extern void          gui_game_event_remove(gui_eventq_t *node);
 
 // Producers
 extern void      gui_game_event_kill(u64b_t time, enemy_t *enemy);

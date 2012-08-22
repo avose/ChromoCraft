@@ -13,6 +13,7 @@
 #include "enemy.h"
 #include "player.h"
 #include "io_bitmap.h"
+#include "game_event.h"
 
 // GUI's version of game state
 typedef struct str_gstate_t {
@@ -29,6 +30,11 @@ typedef struct str_gstate_t {
 
   io_bitmap_t terrain;      // Heightmap for the floor / terrain
 } gstate_t;
+
+// GUI's internal (non-"game") state
+typedef struct str_guistate_t {
+  u32b_t mouse_item_ndx;     // Current item "held" by the mouse
+} guistate_t;
 
 ////////////////////////////////////////////////////////////
 // For GUI and widget files
@@ -124,6 +130,7 @@ extern void UpdateGuiState(gstate_t *s);
 
 // These are intended for use by widgets / gui subcomponents
 #ifdef GUI_WIDGET
+extern guistate_t        GuiState;
 extern gstate_t         *Stateg,*Statec,*Statep;
 extern pthread_mutex_t   StateLock;
 

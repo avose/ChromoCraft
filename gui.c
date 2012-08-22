@@ -43,6 +43,7 @@ static int           Done;
 // Exported to gui_*.c
 gstate_t         *Stateg,*Statec,*Statep;
 pthread_mutex_t   StateLock=PTHREAD_MUTEX_INITIALIZER;
+guistate_t        GuiState;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -378,7 +379,7 @@ static void LayoutWidgets(glwindow_t *glw)
 	    &gf);
 
   // Bag / Intentory
-  AddWidget(glw, 768, (768-16)/2, 128-8, (768-16)/2+8, Bag_Draw, NULL, Bag_Down, NULL, NULL, NULL, &bag);
+  AddWidget(glw, 768, (768-16)/2, 128-8, (768-16)/2+8, Bag_Draw, Bag_KeyPress, Bag_Down, NULL, NULL, NULL, &bag);
 
   // Status / info widget
   AddWidget(glw, 768, (768-16)/4, 128-8, (768-16)/4-8, Stats_Draw, NULL, NULL, NULL, NULL, NULL, &stats);
@@ -569,6 +570,8 @@ void InitGUI(char *version, gstate_t *s)
     Error("GUI: malloc(gstate_t) failed!");
   
   UpdateGuiState(s);
+
+  GuiState.mouse_item_ndx = -1;
 }
 
 int StartGUI(char *version, gstate_t *s)

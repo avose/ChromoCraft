@@ -18,8 +18,6 @@ typedef struct {
   bag_t    bag;          // Inventory
 
   double   score;        // Player score (points)
-
-  gem_t    mouse_gem;    // Current gem "held" by the mouse
 } player_t;
 
 ////////////////////////////////////////////////////////////

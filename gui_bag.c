@@ -41,36 +41,42 @@ void Bag_Down(widget_t *w, const int x, const int y, const int b)
       (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
     // Find the closest gem to the mouse.
     for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
-      switch(Statec->player.bag.items[i].type) {
-      case BAG_ITEM_TYPE_GEM:
-	// Find position of the gem
-	xf  = i%3 + (2.0f/(3.0f*2.0f)); 
-	xf /= 3.0f;
-	yf  = i/3 + (2.0f/(3.0f*2.0f)); 
-	yf /= 15.0f;
-	xs  = ScaleX(w,xf*w->w+w->x);
-	ys  = ScaleY(w,yf*w->h+w->y);
-	// Get distance to mouse
-	d = sqrt((xs-x)*(xs-x) + (ys-y)*(ys-y));
-	if( d < md ) {
-	  ndx = i;
-	  md  = d;
-	  gem = &(Statec->player.bag.items[i].gem);
+      if( i != GuiState.mouse_item_ndx ) {
+	switch(Statec->player.bag.items[i].type) {
+	case BAG_ITEM_TYPE_GEM:
+	  // Find position of the gem
+	  xf  = i%3 + (2.0f/(3.0f*2.0f)); 
+	  xf /= 3.0f;
+	  yf  = i/3 + (2.0f/(3.0f*2.0f)); 
+	  yf /= 15.0f;
+	  xs  = ScaleX(w,xf*w->w+w->x);
+	  ys  = ScaleY(w,yf*w->h+w->y);
+	  // Get distance to mouse
+	  d = sqrt((xs-x)*(xs-x) + (ys-y)*(ys-y));
+	  if( d < md ) {
+	    ndx = i;
+	    md  = d;
+	    gem = &(Statec->player.bag.items[i].gem);
+	  }
+	  break;
 	}
-	break;
       }
     }
 
     // Pick up the gem.
     if( gem ) {
-      memcpy(&(Statec->player.mouse_gem),gem,sizeof(gem_t));
-      bag_remove_item(&(Statec->player.bag), ndx);
-      printf("Picked up gem[%d] with color (%lf,%lf,%lf).\n",
-	     ndx,
-	     gem->color.a[0],
-	     gem->color.a[1],
-	     gem->color.a[2] );
+      // Pick up gem into mouse (escape key / other event will drop)
+      GuiState.mouse_item_ndx = ndx;
     }
+  }
+}
+
+// Key callbacks
+
+void Bag_KeyPress(widget_t *w, char key, unsigned int keycode)
+{
+  if( GuiState.mouse_item_ndx != -1 ) {
+    GuiState.mouse_item_ndx = -1;
   }
 }
 
@@ -78,50 +84,50 @@ void Bag_Down(widget_t *w, const int x, const int y, const int b)
 
 void Bag_Draw(widget_t *w)
 {
-  //bag_gui_t *gf = (bag_gui_t*)w->wd;
-
   u32b_t i,j,x,y;
   double r,xf,yf,ratio=w->w/((double)w->h);
 
   // Draw the items
   for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
-    // Find position of items
-    x  = i%3;
-    xf = x + (2.0f/(3.0f*2.0f)); 
-    xf /= 3.0;
-    y  = i/3;
-    yf = y + (2.0f/(3.0f*2.0f)); 
-    yf /= 15.0;
-    // Figure out item type
-    switch(Statec->player.bag.items[i].type) {
-    case BAG_ITEM_TYPE_GEM:
-      // Gem border
-      glBegin(GL_POLYGON);   
-      glColor3f(1.0f, 1.0f, 1.0f); 
-      r = 20 / 255.0;
-      for(j=0; j<6; ) {
-	glVertex3f(xf+r*cos(2*3.14159265*(j/5.0)), 
-		   yf+r*ratio*sin(2*3.14159265*(j/5.0)), 1.0f );
-	j++;
-	glVertex3f(xf+r*cos(2*3.14159265*(j/5.0)), 
-		   yf+r*ratio*sin(2*3.14159265*(j/5.0)), 1.0f );
+    if( i != GuiState.mouse_item_ndx ) {
+      // Find position of items
+      x  = i%3;
+      xf = x + (2.0f/(3.0f*2.0f)); 
+      xf /= 3.0;
+      y  = i/3;
+      yf = y + (2.0f/(3.0f*2.0f)); 
+      yf /= 15.0;
+      // Figure out item type
+      switch(Statec->player.bag.items[i].type) {
+      case BAG_ITEM_TYPE_GEM:
+	// Gem border
+	glBegin(GL_POLYGON);   
+	glColor3f(1.0f, 1.0f, 1.0f); 
+	r = 20 / 255.0;
+	for(j=0; j<6; ) {
+	  glVertex3f(xf+r*cos(2*3.14159265*(j/5.0)), 
+		     yf+r*ratio*sin(2*3.14159265*(j/5.0)), 1.0f );
+	  j++;
+	  glVertex3f(xf+r*cos(2*3.14159265*(j/5.0)), 
+		     yf+r*ratio*sin(2*3.14159265*(j/5.0)), 1.0f );
+	}
+	glEnd();
+	glBegin(GL_POLYGON);
+	// Gem center
+	glColor3f( (Statec->player.bag.items[i].gem.color.a[0])/255.0, 
+		   (Statec->player.bag.items[i].gem.color.a[1])/255.0,
+		   (Statec->player.bag.items[i].gem.color.a[2])/255.0  );
+	r = 16 / 255.0;
+	for(j=0; j<6; ) {
+	  glVertex2f(xf+r*cos(2*3.14159265*(j/5.0)), 
+		     yf+r*ratio*sin(2*3.14159265*(j/5.0))  );
+	  j++;
+	  glVertex2f(xf+r*cos(2*3.14159265*(j/5.0)), 
+		     yf+r*ratio*sin(2*3.14159265*(j/5.0))  );
+	}
+	glEnd();
+	break;
       }
-      glEnd();
-      glBegin(GL_POLYGON);
-      // Gem center
-      glColor3f( (Statec->player.bag.items[i].gem.color.a[0])/255.0, 
-		 (Statec->player.bag.items[i].gem.color.a[1])/255.0,
-		 (Statec->player.bag.items[i].gem.color.a[2])/255.0  );
-      r = 16 / 255.0;
-      for(j=0; j<6; ) {
-	glVertex2f(xf+r*cos(2*3.14159265*(j/5.0)), 
-		   yf+r*ratio*sin(2*3.14159265*(j/5.0))  );
-	j++;
-	glVertex2f(xf+r*cos(2*3.14159265*(j/5.0)), 
-		   yf+r*ratio*sin(2*3.14159265*(j/5.0))  );
-      }
-      glEnd();
-      break;
     }
   }
 
