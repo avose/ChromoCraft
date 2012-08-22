@@ -41,6 +41,14 @@ vector3_t* vector3_add_scalar(vector3_t *v1, vector3_t *v2, const double s)
 }
 
 //
+// return dot(v1, v2);
+//
+double vector3_dotprod(vector3_t *v1, vector3_t *v2)
+{
+  return v1->s.x*v2->s.x + v1->s.y*v2->s.y + v1->s.z*v2->s.z;
+}
+
+//
 // v3[i] = v1[i] + v2[i]
 //
 vector3_t* vector3_add_vector(vector3_t *v1, vector3_t *v2, vector3_t *v3)
@@ -100,6 +108,24 @@ vector3_t* vector3_copy(vector3_t *v1, vector3_t *v2)
   v2->s.z = v1->s.z;
   
   return v2;
+}
+
+//
+// return dist( (point)x, (point)l_1, (point)l_2 );
+//
+double vector3_point_line_dist(vector3_t *x, vector3_t *l1, vector3_t *l2)
+{
+  vector3_t l2ml1,l1mx;
+  double    l2ml1l,l1mxl;
+  
+  vector3_sub_vector(l2, l1, &l2ml1);
+  vector3_sub_vector(l1,  x, &l1mx );
+  l2ml1l = vector3_length(&l2ml1);
+  l1mxl  = vector3_length(&l1mx);
+
+  return (l1mxl*l1mxl*l2ml1l*l2ml1l - vector3_dotprod(&l1mx,&l2ml1))
+    /
+    (l2ml1l*l2ml1l);
 }
 
 ////////////////////////////////////////////////////////////

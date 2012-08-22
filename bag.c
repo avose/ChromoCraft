@@ -27,7 +27,7 @@ static s32b_t bag_find_free_slot(bag_t *bag)
 
 void bag_remove_item(bag_t *bag, u32b_t item)
 {
-  // !!av: todo!
+  bag->items[item].type = BAG_ITEM_TYPE_NONE;
 }
 
 u32b_t bag_add_gem(bag_t *bag, gem_t *gem)

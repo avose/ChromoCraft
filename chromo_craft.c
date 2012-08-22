@@ -237,32 +237,6 @@ static void add_some_towers(u32b_t ntowers, u32b_t level)
   }
 }
 
-static void add_some_path()
-{
-  vector3_t v;
-  u32b_t    n;
-
-  // Create a new path head node at the start position
-  memset(&v,0,sizeof(v));
-  State->path = path_new_path(&v);
-
-  // Add some random positions onto the path linked list
-  n = 4 + random_rnd(&State->random,6);
-  while(n--) {
-    // Find a random position for this node
-    v.s.x = random_rnd(&State->random,256);
-    v.s.y = random_rnd(&State->random,256);
-    v.s.z = 0.0; //random_rnd(&State->random,256);
-    // Add the random node
-    path_new_node(State->path,&v);
-  }
-
-  // Add one last node at the opposite end.
-  v.s.x = 255.0;
-  v.s.y = 255.0;
-  v.s.z = 0.0; //255.0;
-  path_new_node(State->path,&v);
-}
 
 static void add_some_gems()
 {

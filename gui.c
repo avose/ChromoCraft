@@ -378,7 +378,7 @@ static void LayoutWidgets(glwindow_t *glw)
 	    &gf);
 
   // Bag / Intentory
-  AddWidget(glw, 768, (768-16)/2, 128-8, (768-16)/2, Bag_Draw, NULL, Bag_Down, NULL, NULL, NULL, &bag);
+  AddWidget(glw, 768, (768-16)/2, 128-8, (768-16)/2+8, Bag_Draw, NULL, Bag_Down, NULL, NULL, NULL, &bag);
 
   // Status / info widget
   AddWidget(glw, 768, (768-16)/4, 128-8, (768-16)/4-8, Stats_Draw, NULL, NULL, NULL, NULL, NULL, &stats);
