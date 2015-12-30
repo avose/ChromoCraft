@@ -22,10 +22,14 @@
 
 #include "types.h"
 #include "util.h"
+#include "color.h"
 #define GUI_WIDGET
 #include "gui.h"
 #undef GUI_WIDGET
 #include "gui_bag.h"
+
+static double HandX=0.0;
+static double HandY=0.0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -82,10 +86,43 @@ void Bag_KeyPress(widget_t *w, char key, unsigned int keycode)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Gem_Draw(gem_t *gem, double xf, double yf, double ratio)
+{
+  double r;
+  int    j;
+
+  // Gem border
+  glBegin(GL_POLYGON);   
+  glColor3f(1.0f, 1.0f, 1.0f); 
+  r = 20 / 255.0;
+  for(j=0; j<6; ) {
+    glVertex3f(xf+r*cos(2*3.14159265*(j/5.0)), 
+	       yf+r*ratio*sin(2*3.14159265*(j/5.0)), 1.0f );
+    j++;
+    glVertex3f(xf+r*cos(2*3.14159265*(j/5.0)), 
+	       yf+r*ratio*sin(2*3.14159265*(j/5.0)), 1.0f );
+  }
+  glEnd();
+  glBegin(GL_POLYGON);
+  // Gem center
+  glColor3f( (gem->color.a[0])/255.0, 
+	     (gem->color.a[1])/255.0,
+	     (gem->color.a[2])/255.0  );
+  r = 16 / 255.0;
+  for(j=0; j<6; ) {
+    glVertex2f(xf+r*cos(2*3.14159265*(j/5.0)), 
+	       yf+r*ratio*sin(2*3.14159265*(j/5.0))  );
+    j++;
+    glVertex2f(xf+r*cos(2*3.14159265*(j/5.0)), 
+	       yf+r*ratio*sin(2*3.14159265*(j/5.0))  );
+  }
+  glEnd();
+}
+
 void Bag_Draw(widget_t *w)
 {
-  u32b_t i,j,x,y;
-  double r,xf,yf,ratio=w->w/((double)w->h);
+  u32b_t i,x,y;
+  double xf,yf,ratio=w->w/((double)w->h);
 
   // Draw the items
   for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
@@ -100,32 +137,7 @@ void Bag_Draw(widget_t *w)
       // Figure out item type
       switch(Statec->player.bag.items[i].type) {
       case BAG_ITEM_TYPE_GEM:
-	// Gem border
-	glBegin(GL_POLYGON);   
-	glColor3f(1.0f, 1.0f, 1.0f); 
-	r = 20 / 255.0;
-	for(j=0; j<6; ) {
-	  glVertex3f(xf+r*cos(2*3.14159265*(j/5.0)), 
-		     yf+r*ratio*sin(2*3.14159265*(j/5.0)), 1.0f );
-	  j++;
-	  glVertex3f(xf+r*cos(2*3.14159265*(j/5.0)), 
-		     yf+r*ratio*sin(2*3.14159265*(j/5.0)), 1.0f );
-	}
-	glEnd();
-	glBegin(GL_POLYGON);
-	// Gem center
-	glColor3f( (Statec->player.bag.items[i].gem.color.a[0])/255.0, 
-		   (Statec->player.bag.items[i].gem.color.a[1])/255.0,
-		   (Statec->player.bag.items[i].gem.color.a[2])/255.0  );
-	r = 16 / 255.0;
-	for(j=0; j<6; ) {
-	  glVertex2f(xf+r*cos(2*3.14159265*(j/5.0)), 
-		     yf+r*ratio*sin(2*3.14159265*(j/5.0))  );
-	  j++;
-	  glVertex2f(xf+r*cos(2*3.14159265*(j/5.0)), 
-		     yf+r*ratio*sin(2*3.14159265*(j/5.0))  );
-	}
-	glEnd();
+	Gem_Draw(&(Statec->player.bag.items[i].gem),xf,yf,ratio);
 	break;
       }
     }
@@ -139,6 +151,14 @@ void Bag_Draw(widget_t *w)
   glVertex2f(1.0f,1.0f);
   glVertex2f(1.0f,0.0f);
   glEnd();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Bag_MouseMove(widget_t *w, int x, int y)
+{
+  HandX = x;
+  HandY = y;
 }
 
 #endif // !GUI_BAG_C

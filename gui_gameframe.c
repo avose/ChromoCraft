@@ -24,6 +24,7 @@
 
 #include "types.h"
 #include "util.h"
+#include "color.h"
 #include "gui_game_event.h"
 #define GUI_WIDGET
 #include "gui.h"
@@ -373,10 +374,12 @@ static void DrawTowers()
     glTranslatef((Statec->player.towers[i].position.s.x)/255.0f,
 		 Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.025,
 		 (Statec->player.towers[i].position.s.y)/255.0f);
-    if( Statec->player.towers[i].flags&TOWER_FLAG_SELECTED ) {
-      gluSphere(qdrc, r*4, slices , stacks);
-    } else {
-      gluSphere(qdrc, r, slices , stacks);
+    if( !color_is_black(&(Statec->player.towers[i].gem.color)) ) {
+      if( Statec->player.towers[i].flags&TOWER_FLAG_SELECTED ) {
+	gluSphere(qdrc, r*4, slices , stacks);
+      } else {
+	gluSphere(qdrc, r, slices , stacks);
+      }
     }
     Project(&sc);
     Statec->player.towers[i].scr_pos.s.x = sc.s.x;
@@ -751,7 +754,8 @@ void Gameframe_MouseDown(widget_t *w, int x, int y, int b)
 {
   gameframe_gui_t *gf = (gameframe_gui_t*)w->wd;
   double d,nd=100000;
-  int    i,ni=-1,sel;
+  int    i,ni=-1;
+  gem_t  gem;
 
   // Check bounds
   if( (x >= ScaleX(w, w->x)) && (x <= ScaleX(w, w->x+w->w)) && 
@@ -780,33 +784,19 @@ void Gameframe_MouseDown(widget_t *w, int x, int y, int b)
 	  ni = i;
 	}
       }
-      sel = -1;
-      for(i=0; i<Statec->player.ntowers; i++) {
-	if( Statec->player.towers[i].flags & TOWER_FLAG_SELECTED ) {
-	  sel = i;
-	  break;
-	}
-      }
-      if( sel == -1 ) {
-	if( ni != -1 ) {
-	  for(i=0; i<Statec->player.ntowers; i++) {
-	    if( i == ni ) {
-	      Statec->player.towers[i].flags |= TOWER_FLAG_SELECTED;
-	    } else {
-	      Statec->player.towers[i].flags &= ~(TOWER_FLAG_SELECTED);
-	    }
-	  }
-	}
-      } else {
-	if( (ni != -1) && (sel != -1) ) {
-	  gem_t gem;
-	  memcpy(&gem, &(Statec->player.towers[ni].gem), sizeof(gem_t));
-	  memcpy(&(Statec->player.towers[ni].gem), &(Statec->player.towers[sel].gem), sizeof(gem_t));
-	  memcpy(&(Statec->player.towers[sel].gem), &gem, sizeof(gem_t));
-	  for(i=0; i<Statec->player.ntowers; i++) {
-	    Statec->player.towers[i].flags &= ~(TOWER_FLAG_SELECTED);
-	  }
-	}
+      if( color_is_black(&(Gem.color)) && (ni != -1) ) {
+	// From tower to hand.
+	memcpy(&Gem, &(Statec->player.towers[ni].gem), sizeof(gem_t));
+	memset(&(Statec->player.towers[ni].gem), 0, sizeof(gem_t));
+      } else if( !color_is_black(&(Gem.color)) && (ni != -1) && color_is_black(&(Statec->player.towers[ni].gem.color))) {
+	// From hand to tower.
+	memcpy(&(Statec->player.towers[ni].gem), &Gem, sizeof(gem_t));
+	memset(&Gem, 0, sizeof(gem_t));
+      } else if( !color_is_black(&(Gem.color)) && (ni != -1) && !color_is_black(&(Statec->player.towers[ni].gem.color))) {
+	// Swap hand<->tower.
+	memcpy(&gem, &Gem, sizeof(gem_t));
+	memcpy(&Gem, &(Statec->player.towers[ni].gem), sizeof(gem_t));
+	memcpy(&(Statec->player.towers[ni].gem), &gem, sizeof(gem_t));
       }
       break;
     case MOUSE_RIGHT:

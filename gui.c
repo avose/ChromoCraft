@@ -23,6 +23,7 @@
 
 #include "types.h"
 #include "util.h"
+#include "color.h"
 #include "gui.h"
 #include "gui_button.h"
 #include "gui_gameframe.h"
@@ -44,6 +45,8 @@ static int           Done;
 gstate_t         *Stateg,*Statec,*Statep;
 pthread_mutex_t   StateLock=PTHREAD_MUTEX_INITIALIZER;
 guistate_t        GuiState;
+gem_t             Gem;
+vector3_t         HandPos;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -336,6 +339,57 @@ static void AddWidget(glwindow_t *glw, float  x, float y, float w, float h,
   nWidgets++;
 }
 
+void Draw_HandGem(gem_t *gem)
+{
+  double r;
+  int    j;
+
+  // Gem border
+  glBegin(GL_POLYGON);   
+  glColor3f(1.0f, 1.0f, 1.0f); 
+  r = 20 / 255.0;
+  for(j=0; j<6; ) {
+    glVertex3f(r*cos(2*3.14159265*(j/5.0)), 
+	       r*sin(2*3.14159265*(j/5.0)), 1.0f );
+    j++;
+    glVertex3f(r*cos(2*3.14159265*(j/5.0)), 
+	       r*sin(2*3.14159265*(j/5.0)), 1.0f );
+  }
+  glEnd();
+  glBegin(GL_POLYGON);
+  // Gem center
+  glColor3f( (gem->color.a[0])/255.0, 
+	     (gem->color.a[1])/255.0,
+	     (gem->color.a[2])/255.0  );
+  r = 16 / 255.0;
+  for(j=0; j<6; ) {
+    glVertex2f(r*cos(2*3.14159265*(j/5.0)), 
+	       r*sin(2*3.14159265*(j/5.0))  );
+    j++;
+    glVertex2f(r*cos(2*3.14159265*(j/5.0)), 
+	       r*sin(2*3.14159265*(j/5.0))  );
+  }
+  glEnd();
+}
+
+void Draw_Hand(glwindow_t *glw)
+{
+  double xf,yf;
+
+  glPushMatrix();
+  if( !color_is_black(&(Gem.color)) ) {
+    xf = HandPos.s.x / glw->width;
+    yf = HandPos.s.y / glw->height;
+    glDisable(GL_DEPTH_TEST);
+    glScalef(glw->width,glw->height,0.0f);
+    glTranslatef(xf, yf, 1.0f);
+    glScalef(0.2,.2,0.0f);
+    Draw_HandGem(&Gem);
+    glEnable(GL_DEPTH_TEST);
+  }
+  glPopMatrix();
+}
+
 static void DrawWidgets(glwindow_t *glw)
 {
   int i;
@@ -343,6 +397,7 @@ static void DrawWidgets(glwindow_t *glw)
   // Clear the old scene
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
+  glPushMatrix();
   glScalef(((float)glw->width)/glw->pwidth,((float)glw->height)/glw->pheight,1.0f);
 
   // Draw all the widgets
@@ -355,6 +410,10 @@ static void DrawWidgets(glwindow_t *glw)
       glPopMatrix();
     }
   } 
+  glPopMatrix();
+
+  // Draw all the gen in hand
+  Draw_Hand(glw);
 
   // Swap buffers to draw to screen
   glXSwapBuffers(glw->dpy, glw->win);
@@ -379,7 +438,7 @@ static void LayoutWidgets(glwindow_t *glw)
 	    &gf);
 
   // Bag / Intentory
-  AddWidget(glw, 768, (768-16)/2, 128-8, (768-16)/2+8, Bag_Draw, Bag_KeyPress, Bag_Down, NULL, NULL, NULL, &bag);
+  AddWidget(glw, 768, (768-16)/2, 128-8, (768-16)/2+8, Bag_Draw, Bag_KeyPress, Bag_Down, NULL, Bag_MouseMove, NULL, &bag);
 
   // Status / info widget
   AddWidget(glw, 768, (768-16)/4, 128-8, (768-16)/4-8, Stats_Draw, NULL, NULL, NULL, NULL, NULL, &stats);
@@ -430,6 +489,8 @@ static void HandleEvent(glwindow_t *glw)
       }
       break;
     case MotionNotify:
+      HandPos.s.x = xe.xbutton.x;
+      HandPos.s.y = xe.xbutton.y;
       for(i=0; i<nWidgets; i++) {
 	if( Widgets[i].mousemove )
 	  (*Widgets[i].mousemove)(&Widgets[i],xe.xbutton.x, xe.xbutton.y);
