@@ -40,21 +40,6 @@ static int  gl_maxlights;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Button callbacks
-
-void Gameframe_Down(widget_t *w, const int x, const int y, const int b)
-{
-  if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
-      (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
-    // !!av:
-    // Project all towers from 3D coords to 2D
-    // Select closest tower within a radius of the mouse position
-    // If the tower has a gem, start dragging the gem
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 static int BuildSkyBox()
 {
   float color[4]={0.25f,0.25f,0.25f,1.0f};
@@ -330,10 +315,34 @@ static void DrawPath()
   glDisable(GL_LINE_SMOOTH);
 }
 
+static void Project(vector3_t *outv)
+{
+  GLint    viewport[4];
+  GLdouble modelview[16];
+  GLdouble projection[16];
+  GLdouble winX, winY, winZ;
+  GLdouble posX, posY, posZ;
+
+  posX=0.0;
+  posY=0.0;
+  posZ=0.0;
+
+  glGetDoublev(  GL_MODELVIEW_MATRIX, modelview );
+  glGetDoublev(  GL_PROJECTION_MATRIX, projection );
+  glGetIntegerv( GL_VIEWPORT, viewport );
+
+  gluProject(posX,posY,posZ,modelview,projection,viewport,&winX,&winY,&winZ);
+
+  outv->s.x = winX;
+  outv->s.y = winY;
+  outv->s.z = winZ;
+}
+
 static void DrawTowers()
 {
-  float r,color[4],white[4]={1.0f,1.0f,1.0f,1.0f},black[4]={0.0f,0.0f,0.0f,0.0f};
-  int   i,x,y,slices=GGF_GEM_SLICES,stacks=GGF_GEM_STACKS;
+  float      r,color[4],white[4]={1.0f,1.0f,1.0f,1.0f},black[4]={0.0f,0.0f,0.0f,0.0f};
+  int        i,x,y,slices=GGF_GEM_SLICES,stacks=GGF_GEM_STACKS;
+  vector3_t  sc;
 
   static int         init=1;
   static GLUquadric *qdrc;
@@ -364,7 +373,15 @@ static void DrawTowers()
     glTranslatef((Statec->player.towers[i].position.s.x)/255.0f,
 		 Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.025,
 		 (Statec->player.towers[i].position.s.y)/255.0f);
-    gluSphere(qdrc, r, slices , stacks);
+    if( Statec->player.towers[i].flags&TOWER_FLAG_SELECTED ) {
+      gluSphere(qdrc, r*4, slices , stacks);
+    } else {
+      gluSphere(qdrc, r, slices , stacks);
+    }
+    Project(&sc);
+    Statec->player.towers[i].scr_pos.s.x = sc.s.x;
+    Statec->player.towers[i].scr_pos.s.y = sc.s.y;
+    Statec->player.towers[i].scr_pos.s.z = sc.s.z;
     glPopMatrix();
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
     // Draw the stone tower stand
@@ -733,6 +750,8 @@ void Gameframe_Draw(widget_t *w)
 void Gameframe_MouseDown(widget_t *w, int x, int y, int b)
 {
   gameframe_gui_t *gf = (gameframe_gui_t*)w->wd;
+  double d,nd=100000;
+  int    i,ni=-1,sel;
 
   // Check bounds
   if( (x >= ScaleX(w, w->x)) && (x <= ScaleX(w, w->x+w->w)) && 
@@ -753,6 +772,44 @@ void Gameframe_MouseDown(widget_t *w, int x, int y, int b)
       }
       break;
     case MOUSE_LEFT:
+      for(i=0; i<Statec->player.ntowers; i++) {
+	d = sqrt((Statec->player.towers[i].scr_pos.s.x-x)*(Statec->player.towers[i].scr_pos.s.x-x) +
+		 ((ScaleY(w,w->h)-Statec->player.towers[i].scr_pos.s.y)-y)*((ScaleY(w,w->h)-Statec->player.towers[i].scr_pos.s.y)-y));
+	if( d < nd ) {
+	  nd = d;
+	  ni = i;
+	}
+      }
+      sel = -1;
+      for(i=0; i<Statec->player.ntowers; i++) {
+	if( Statec->player.towers[i].flags & TOWER_FLAG_SELECTED ) {
+	  sel = i;
+	  break;
+	}
+      }
+      if( sel == -1 ) {
+	if( ni != -1 ) {
+	  for(i=0; i<Statec->player.ntowers; i++) {
+	    if( i == ni ) {
+	      Statec->player.towers[i].flags |= TOWER_FLAG_SELECTED;
+	    } else {
+	      Statec->player.towers[i].flags &= ~(TOWER_FLAG_SELECTED);
+	    }
+	  }
+	}
+      } else {
+	if( (ni != -1) && (sel != -1) ) {
+	  gem_t gem;
+	  memcpy(&gem, &(Statec->player.towers[ni].gem), sizeof(gem_t));
+	  memcpy(&(Statec->player.towers[ni].gem), &(Statec->player.towers[sel].gem), sizeof(gem_t));
+	  memcpy(&(Statec->player.towers[sel].gem), &gem, sizeof(gem_t));
+	  for(i=0; i<Statec->player.ntowers; i++) {
+	    Statec->player.towers[i].flags &= ~(TOWER_FLAG_SELECTED);
+	  }
+	}
+      }
+      break;
+    case MOUSE_RIGHT:
       // Record that the left mouse is down
       gf->md = b;
       gf->mdx = x;
@@ -766,7 +823,7 @@ void Gameframe_MouseUp(widget_t *w, int x, int y, int b)
 {
   gameframe_gui_t *gf = (gameframe_gui_t*)w->wd;
 
-  if( gf->md == MOUSE_LEFT ) {
+  if( gf->md == MOUSE_RIGHT ) {
     // Apply distance moved to the rotation
     gf->rotx += (((float)y)-gf->mdy) / 3.1415f / 2.0f;
     gf->roty += (((float)x)-gf->mdx) / 3.1415f / 6.0f;
@@ -784,7 +841,7 @@ void Gameframe_MouseMove(widget_t *w, int x, int y)
 {
   gameframe_gui_t *gf = (gameframe_gui_t*)w->wd;
 
-  if( gf->md == MOUSE_LEFT ) {
+  if( gf->md == MOUSE_RIGHT ) {
     // Apply distance moved to the rotation
     gf->rotx += (((float)y)-gf->mdy) / 3.1415f;
     gf->roty += (((float)x)-gf->mdx) / 3.1415f;

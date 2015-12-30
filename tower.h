@@ -5,10 +5,15 @@
 #include "gem.h"
 #include "enemy.h"
 
+#define TOWER_FLAG_NONE     0
+#define TOWER_FLAG_SELECTED 1
+
 typedef struct str_tower_t {
   gem_t     gem;
   vector3_t position;
+  vector3_t scr_pos;
   u64b_t    ftime;      // Time last fired
+  u64b_t    flags;
 } tower_t;
 
 ////////////////////////////////////////////////////////////

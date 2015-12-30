@@ -1,5 +1,4 @@
-#CC=   gcc
-CC=   colorgcc
+CC=   gcc
 OPTS= -std=gnu99
 
 # Debug options
