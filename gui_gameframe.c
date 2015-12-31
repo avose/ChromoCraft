@@ -755,7 +755,6 @@ void Gameframe_MouseDown(widget_t *w, int x, int y, int b)
   gameframe_gui_t *gf = (gameframe_gui_t*)w->wd;
   double d,nd=100000;
   int    i,ni=-1;
-  gem_t  gem;
 
   // Check bounds
   if( (x >= ScaleX(w, w->x)) && (x <= ScaleX(w, w->x+w->w)) && 
@@ -784,21 +783,14 @@ void Gameframe_MouseDown(widget_t *w, int x, int y, int b)
 	  ni = i;
 	}
       }
-      if( color_is_black(&(Gem.color)) && (ni != -1) ) {
+      if( (GuiState.mouse_item_ndx == -1) && (ni != -1) && !color_is_black(&(Statec->player.towers[ni].gem.color)) ) {
 	// From tower to hand.
-	memcpy(&Gem, &(Statec->player.towers[ni].gem), sizeof(gem_t));
-	//memset(&(Statec->player.towers[ni].gem), 0, sizeof(gem_t));
 	game_event_tower_remove_gem(&(Statec->player.towers[ni]));
-      } else if( !color_is_black(&(Gem.color)) && (ni != -1) && color_is_black(&(Statec->player.towers[ni].gem.color))) {
+      } else if( (GuiState.mouse_item_ndx != -1) && (ni != -1) && color_is_black(&(Statec->player.towers[ni].gem.color)) ) {
 	// From hand to tower.
-	memcpy(&(Statec->player.towers[ni].gem), &Gem, sizeof(gem_t));
-	//game_event_tower_install_gem(&(Statec->player.towers[ni]), u32b_t ndx);
-	memset(&Gem, 0, sizeof(gem_t));
-      } else if( !color_is_black(&(Gem.color)) && (ni != -1) && !color_is_black(&(Statec->player.towers[ni].gem.color))) {
+	game_event_tower_install_gem(&(Statec->player.towers[ni]), GuiState.mouse_item_ndx);
+      } else if( (GuiState.mouse_item_ndx != -1) && (ni != -1) && !color_is_black(&(Statec->player.towers[ni].gem.color)) ) {
 	// Swap hand<->tower.
-	memcpy(&gem, &Gem, sizeof(gem_t));
-	memcpy(&Gem, &(Statec->player.towers[ni].gem), sizeof(gem_t));
-	memcpy(&(Statec->player.towers[ni].gem), &gem, sizeof(gem_t));
       }
       break;
     case MOUSE_RIGHT:

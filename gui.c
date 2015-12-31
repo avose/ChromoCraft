@@ -45,7 +45,6 @@ static int           Done;
 gstate_t         *Stateg,*Statec,*Statep;
 pthread_mutex_t   StateLock=PTHREAD_MUTEX_INITIALIZER;
 guistate_t        GuiState;
-gem_t             Gem;
 vector3_t         HandPos;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -377,15 +376,22 @@ void Draw_Hand(glwindow_t *glw)
   double xf,yf;
 
   glPushMatrix();
-  if( !color_is_black(&(Gem.color)) ) {
-    xf = HandPos.s.x / glw->width;
-    yf = HandPos.s.y / glw->height;
-    glDisable(GL_DEPTH_TEST);
-    glScalef(glw->width,glw->height,0.0f);
-    glTranslatef(xf, yf, 1.0f);
-    glScalef(0.2,.2,0.0f);
-    Draw_HandGem(&Gem);
-    glEnable(GL_DEPTH_TEST);
+  if( GuiState.mouse_item_ndx != -1 ) {
+    if( (Statec->player.bag.items[GuiState.mouse_item_ndx].type != BAG_ITEM_TYPE_GEM) || 
+	color_is_black(&(Statec->player.bag.items[GuiState.mouse_item_ndx].gem.color)) ) {
+      // Bag index points to empty slot.
+      GuiState.mouse_item_ndx = -1;
+    } else {
+      // Bag index (thus hand contents) are valid gem.
+      xf = HandPos.s.x / glw->width;
+      yf = HandPos.s.y / glw->height;
+      glDisable(GL_DEPTH_TEST);
+      glScalef(glw->width,glw->height,0.0f);
+      glTranslatef(xf, yf, 1.0f);
+      glScalef(0.2,.2,0.0f);
+      Draw_HandGem(&(Statec->player.bag.items[GuiState.mouse_item_ndx].gem));
+      glEnable(GL_DEPTH_TEST);
+    }
   }
   glPopMatrix();
 }
