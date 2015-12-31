@@ -294,9 +294,11 @@ static void DrawPath()
   int     x,y;
 
   // Draw enemy path
+  glDisable(GL_LIGHTING);
+  glDisable(GL_DEPTH_TEST);
   glEnable(GL_LINE_SMOOTH);
   if( Statec->path ) {
-    glColor3f(0.75f, 0.25f, 0.25f);
+    glColor3f(0.75f, 0.15f, 0.15f);
     glBegin(GL_LINES); 
     for(p=Statec->path; p != Statec->path->last; ) {
       x = (p->position.s.x)/255.0f * 63.0f;
@@ -314,6 +316,8 @@ static void DrawPath()
     glEnd();
   }
   glDisable(GL_LINE_SMOOTH);
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_LIGHTING);
 }
 
 static void Project(vector3_t *outv)

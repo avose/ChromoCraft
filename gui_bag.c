@@ -43,34 +43,41 @@ void Bag_Down(widget_t *w, const int x, const int y, const int b)
 
   if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
       (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
-    // Find the closest gem to the mouse..
-    for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
-      if( i != GuiState.mouse_item_ndx ) {
-	switch(Statec->player.bag.items[i].type) {
-	case BAG_ITEM_TYPE_GEM:
-	  // Find position of the gem
-	  xf  = i%3 + (2.0f/(3.0f*2.0f)); 
-	  xf /= 3.0f;
-	  yf  = i/3 + (2.0f/(3.0f*2.0f)); 
-	  yf /= 15.0f;
-	  xs  = ScaleX(w,xf*w->w+w->x);
-	  ys  = ScaleY(w,yf*w->h+w->y);
-	  // Get distance to mouse
-	  d = sqrt((xs-x)*(xs-x) + (ys-y)*(ys-y));
-	  if( d < md ) {
-	    ndx = i;
-	    md  = d;
-	    gem = &(Statec->player.bag.items[i].gem);
+    switch(b) {
+    case MOUSE_LEFT:
+      // Find the closest gem to the mouse..
+      for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
+	if( i != GuiState.mouse_item_ndx ) {
+	  switch(Statec->player.bag.items[i].type) {
+	  case BAG_ITEM_TYPE_GEM:
+	    // Find position of the gem
+	    xf  = i%3 + (2.0f/(3.0f*2.0f)); 
+	    xf /= 3.0f;
+	    yf  = i/3 + (2.0f/(3.0f*2.0f)); 
+	    yf /= 15.0f;
+	    xs  = ScaleX(w,xf*w->w+w->x);
+	    ys  = ScaleY(w,yf*w->h+w->y);
+	    // Get distance to mouse
+	    d = sqrt((xs-x)*(xs-x) + (ys-y)*(ys-y));
+	    if( d < md ) {
+	      ndx = i;
+	      md  = d;
+	      gem = &(Statec->player.bag.items[i].gem);
+	    }
+	    break;
 	  }
-	  break;
 	}
       }
-    }
-
-    // Pick up the gem.
-    if( gem ) {
-      // Pick up gem into mouse (escape key / other event will drop)
-      GuiState.mouse_item_ndx = ndx;
+      // Pick up the gem.
+      if( gem ) {
+	// Pick up gem into mouse (escape key / other event will drop)
+	GuiState.mouse_item_ndx = ndx;
+      }
+      break;
+    case MOUSE_RIGHT:
+      // Clear the bag mouse selection.
+      GuiState.mouse_item_ndx = -1;
+      break;
     }
   }
 }
