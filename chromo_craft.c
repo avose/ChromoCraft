@@ -374,6 +374,35 @@ static void process_events()
       // Remove the event from the queue.
       game_event_remove(q);
       break;
+    case GAME_EVENT_TOWER_SWAP_GEM:
+      for(i=0; i<State->player.ntowers; i++) {
+	// Apply event to the tower at the specified location.
+	if( vector3_compare(&(State->player.towers[i].position), &(q->tower_install_gem.tpos)) ) {
+	  bag_add_gem(&(State->player.bag), &(State->player.towers[i].gem));
+	  tower_remove_gem(&(State->player.towers[i]));
+	  tower_install_gem(&(State->player.towers[i]), &(State->player.bag.items[q->tower_install_gem.ndx].gem));
+	  bag_remove_item(&(State->player.bag),q->tower_install_gem.ndx);
+	  break;
+	}
+      }
+      // Remove the event from the queue.
+      game_event_remove(q);
+      break;
+    case GAME_EVENT_CREATE_GEM:
+      // Create new gem in player's bag.
+      if( State->player.mana >= GEM_CREATE_MANA_COST ) {
+	bag_add_gem(&(State->player.bag), &(q->create_gem.gem));
+	State->player.mana -= GEM_CREATE_MANA_COST;
+      }
+      // Remove the event from the queue.
+      game_event_remove(q);
+      break;
+    case GAME_EVENT_MIX_GEM:
+      // Mix gems in player's bag.
+      // !!avose: TODO / FIXME.
+      // Remove the event from the queue.
+      game_event_remove(q);
+      break;
     }
   }
 }

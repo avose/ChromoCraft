@@ -779,6 +779,7 @@ void Gameframe_MouseDown(widget_t *w, int x, int y, int b)
       }
       break;
     case MOUSE_LEFT:
+      // Tower interaction.
       for(i=0; i<Statec->player.ntowers; i++) {
 	d = sqrt((Statec->player.towers[i].scr_pos.s.x-x)*(Statec->player.towers[i].scr_pos.s.x-x) +
 		 ((ScaleY(w,w->h)-Statec->player.towers[i].scr_pos.s.y)-y)*((ScaleY(w,w->h)-Statec->player.towers[i].scr_pos.s.y)-y));
@@ -794,7 +795,8 @@ void Gameframe_MouseDown(widget_t *w, int x, int y, int b)
 	// From hand to tower.
 	game_event_tower_install_gem(&(Statec->player.towers[ni]), GuiState.mouse_item_ndx);
       } else if( (GuiState.mouse_item_ndx != -1) && (ni != -1) && !color_is_black(&(Statec->player.towers[ni].gem.color)) ) {
-	// Swap hand<->tower.
+	// Swap hand and tower.
+	game_event_tower_swap_gem(&(Statec->player.towers[ni]), GuiState.mouse_item_ndx);
       }
       break;
     case MOUSE_RIGHT:

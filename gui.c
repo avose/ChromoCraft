@@ -24,6 +24,7 @@
 #include "types.h"
 #include "util.h"
 #include "color.h"
+#include "chromo_craft.h"
 #include "gui.h"
 #include "gui_button.h"
 #include "gui_gameframe.h"
@@ -324,15 +325,18 @@ void Quit_Down(widget_t *w, const int x, const int y, const int b)
 void New_Down(widget_t *w, const int x, const int y, const int b)
 {
   //button_gui_t *btn = (button_gui_t*)(w->wd);
+  gem_t gem;
+  int   i;
   
   if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
       (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
-    // !!avose: TODO / FIXME:
-    //
     // Turn mana into a new gem.
-    // Some kind of poppup gem selector, or just random?
-    //
-    // This needs to be a game event to tell the engine about it.
+    if( Statec->player.mana >= GEM_CREATE_MANA_COST ) {
+      memset(&gem, 0, sizeof(gem_t));
+      i = random_rnd(&(Statec->random),3);
+      gem.color.a[i] = 128;
+      game_event_create_gem(&gem);
+    }
   }
 }
 
@@ -349,6 +353,7 @@ void Mix_Down(widget_t *w, const int x, const int y, const int b)
     //
     // This needs to be a game event to tell the engine about it.
     btn->sel ^= 1;
+    //game_event_mix_gem(gem, GuiState.mouse_item_ndx);
   }
 }
 

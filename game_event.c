@@ -80,7 +80,7 @@ static game_eventq_t* game_event_new_eventq()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Used by event producers
+// Used by event consumers
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -134,7 +134,7 @@ void game_event_remove(game_eventq_t *node)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Used by event consumers
+// Used by event producers
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -168,3 +168,49 @@ void game_event_tower_remove_gem(tower_t *tower)
   pthread_mutex_unlock(&EventLock);
 }
 
+
+void game_event_tower_swap_gem(tower_t *tower, u32b_t ndx)
+{
+  game_event_init();
+
+  // Fill in new node
+  pthread_mutex_lock(&EventLock);
+
+  game_event_new_node(Events);
+  Events->last->type = GAME_EVENT_TOWER_SWAP_GEM;
+  Events->last->tower_install_gem.ndx = ndx;
+  vector3_copy(&(tower->position), &(Events->last->tower_install_gem.tpos));
+  
+  pthread_mutex_unlock(&EventLock);
+}
+
+
+void game_event_create_gem(gem_t *gem)
+{
+  game_event_init();
+
+  // Fill in new node
+  pthread_mutex_lock(&EventLock);
+
+  game_event_new_node(Events);
+  Events->last->type = GAME_EVENT_CREATE_GEM;
+  memcpy(&(Events->last->create_gem.gem), gem, sizeof(gem_t));
+  Events->last->create_gem.ndx = -1;  
+
+  pthread_mutex_unlock(&EventLock);
+}
+
+void game_event_mix_gem(gem_t *gem, u32b_t ndx)
+{
+  game_event_init();
+
+  // Fill in new node
+  pthread_mutex_lock(&EventLock);
+
+  game_event_new_node(Events);
+  Events->last->type = GAME_EVENT_MIX_GEM;
+  memcpy(&(Events->last->create_gem.gem), gem, sizeof(gem_t));
+  Events->last->create_gem.ndx = ndx;
+  
+  pthread_mutex_unlock(&EventLock);
+}

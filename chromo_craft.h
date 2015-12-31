@@ -8,6 +8,9 @@
 #include "player.h"
 #include "io_bitmap.h"
 
+#define GEM_CREATE_MANA_COST 100
+#define GEM_MIX_MANA_COST    50
+
 typedef struct str_state_t {
   u64b_t      time;         // Current time
 
