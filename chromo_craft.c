@@ -317,7 +317,7 @@ static void update_enemies_path()
   u32b_t    i;
 
   // Update position of each enemy that has "started"
-  for(i=0; i<State->nenemies; i++) {
+  for(i=0; i<State->nenemies; ) {
     // Move enemy towards next path point
     if( (State->enemies[i].start_time < State->time) && (State->enemies[i].path != State->path) ) {
       // Build vector poiting toward waypoint
@@ -326,12 +326,28 @@ static void update_enemies_path()
       if( vector3_length(&v) < State->enemies[i].speed*BASE_SPEED ) {
 	vector3_copy(&State->enemies[i].path->position, &State->enemies[i].position);
 	State->enemies[i].path = State->enemies[i].path->next;
+	// Move on to next entry
+	i++;
       } else {
 	// Just move towards it
 	vector3_normalize(&v, &v);
 	vector3_mult_scalar(&v,&v,State->enemies[i].speed*BASE_SPEED);
 	vector3_add_vector(&State->enemies[i].position, &v, &State->enemies[i].position);
+	// Move on to next entry
+	i++;  
       }
+    } else if( State->enemies[i].path == State->path ) {
+      // Enemy reached last path node!
+      // Remove points from score and mana.
+      State->player.score -= State->enemies[i].health;
+      State->player.mana  -= State->enemies[i].health;
+      // Notify GUI of the death.
+      gui_game_event_kill(State->time,&State->enemies[i]);
+      // Kill it (will move last entry into current); retest current.
+      enemy_kill_enemy(i, State->enemies, &State->nenemies, State->senemies);
+    } else {
+      // Move on to next entry.
+      i++;
     }
   }
 
