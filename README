@@ -1,4 +1,5 @@
 ChromoCraft is a tower defense game featuring:
+
 - 3D rendering with OpenGL.
 - Sound and music with OpenAL.
 
@@ -6,3 +7,5 @@ General theme around the mixing (crafting) of color (chromo).
 
 Gems can be created, manipulated, and installed into towers.
 The towers, suitibly empowered, destroy your foes.
+
+http://www.aaronvose.net/chromo_craft/
