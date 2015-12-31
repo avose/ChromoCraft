@@ -425,7 +425,10 @@ static void DrawEnemies()
   // Draw enemies
   for(i=0; i<Statec->nenemies; i++) {
     // Draw a small sphere at the center of the enemy
-    r = log( enemy_get_enemy_xp(&(Statec->enemies[i])) ) / 4.0f / 255.0f;
+    r = log( enemy_get_enemy_xp(&(Statec->enemies[i])) ) / 255.0f;
+    if( r < .005 ) {
+      r = .005;
+    }
     color[0] = (Statec->enemies[i].color.a[0])/255.0f;
     color[1] = (Statec->enemies[i].color.a[1])/255.0f;
     color[2] = (Statec->enemies[i].color.a[2])/255.0f;

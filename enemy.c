@@ -167,26 +167,21 @@ void enemy_new_wave(vector3_t *color, const double time, rnd_t *random, enemy_t 
     // Clear the structure (I count on color being 0 ...)
     memset(&enemy,0,sizeof(enemy_t));
 
-    // Let's give a 10% chance that the creature sent has the exact 
-    // same color as was passed.
-    if( random_U01(random) < .1 ) {
-      memcpy(&enemy.color,color,sizeof(vector3_t));
-    } else {
-      // In this case, let's make it 50/50:  Either one or two colors.
-      enemy.color.s.x = enemy.color.s.y = enemy.color.s.z = 1;
-      if( random_U01(random) < .5 ) {
-	// Two colors chosed based on color distribution
-	do {
-	  choice = random_drand(random,distribution);
-	} while( enemy.color.a[choice] == color->a[choice] );
-	enemy.color.a[choice] = color->a[choice];
-      }
-      // One color based on color distribution
+    // Either one or two colors.
+    enemy.color.s.x = enemy.color.s.y = enemy.color.s.z = 1;
+    if( random_U01(random) < .5 ) {
+      // Two colors chosed based on color distribution
       do {
 	choice = random_drand(random,distribution);
       } while( enemy.color.a[choice] == color->a[choice] );
       enemy.color.a[choice] = color->a[choice];
     }
+
+    // One color based on color distribution
+    do {
+      choice = random_drand(random,distribution);
+    } while( enemy.color.a[choice] == color->a[choice] );
+    enemy.color.a[choice] = color->a[choice];
     
     // The health of the enemy will be the area of the color
     enemy.health = enemy.base_health = color_area(&enemy.color);

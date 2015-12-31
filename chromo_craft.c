@@ -242,35 +242,6 @@ static void add_some_enemies(u32b_t level)
   }
 }
 
-static void add_some_towers(u32b_t ntowers, u32b_t level)
-{
-  vector3_t position;
-  gem_t     gem;
-  u32b_t    i;
-
-  for(i=0; i<ntowers; i++) {
-    // Setup a random position for the towers
-    position.s.x = random_rnd(&State->random,256);
-    position.s.y = random_rnd(&State->random,256);
-    position.s.z = 0.0; //random_rnd(&State->random,256);
-
-    // Create the tower
-    player_add_tower(&State->player, &position);
-    tower_remove_gem(&State->player.towers[State->player.ntowers-1]);
-
-    // (level == 0) => empty tower
-    if( level ) {
-      // Build gem to install into tower
-      gem.color.s.x = random_rnd(&State->random,level)+1;
-      gem.color.s.y = random_rnd(&State->random,level)+1;
-      gem.color.s.z = random_rnd(&State->random,level)+1;
-      // Install the gem
-      tower_install_gem(&State->player.towers[State->player.ntowers-1],&gem);
-    }
-  }
-}
-
-
 static void add_some_gems()
 {
   gem_t g;
@@ -286,14 +257,6 @@ static void add_some_gems()
   g.color.a[0] = 0;
   g.color.a[1] = 128;
   g.color.a[2] = 0;
-
-  bag_add_gem(&State->player.bag,&g);
-  bag_add_gem(&State->player.bag,&g);
-  bag_add_gem(&State->player.bag,&g);
-
-  g.color.a[0] = 0;
-  g.color.a[1] = 0;
-  g.color.a[2] = 128;
 
   bag_add_gem(&State->player.bag,&g);
   bag_add_gem(&State->player.bag,&g);
@@ -340,7 +303,7 @@ static void update_enemies_path()
       // Enemy reached last path node!
       // Remove points from score and mana.
       State->player.score -= State->enemies[i].health;
-      State->player.mana  -= State->enemies[i].health;
+      State->player.mana  -= State->enemies[i].health*0.1;
       // Notify GUI of the death.
       gui_game_event_kill(State->time,&State->enemies[i]);
       // Kill it (will move last entry into current); retest current.
@@ -373,6 +336,7 @@ static void update_towers()
     if( State->enemies[i].health < 0 ) {
       // Add points to score
       State->player.score += State->enemies[i].base_health;
+      State->player.mana  += State->enemies[i].base_health*0.1;
       // Notify GUI of the death
       gui_game_event_kill(State->time,&State->enemies[i]);
       // Kill it (will move last entry into current); retest current
@@ -478,7 +442,7 @@ u64b_t get_time()
 static void game_loop()
 {
   u64b_t         ticks = 0;
-  u64b_t         t1,t2,sleep;
+  u64b_t         t1,t2,sleep,wave=0;
 
   // Set a path for enemies ...
   State->path = load_path_file("data/bmp/path.bmp");
@@ -487,8 +451,7 @@ static void game_loop()
   load_towers_file("data/bmp/towers.bmp");
 
   // Add some stuff ...
-  //add_some_towers(20,0);
-  add_some_enemies(100);
+  add_some_enemies(25);
   add_some_gems();
 
   // Start the GUI
@@ -498,7 +461,8 @@ static void game_loop()
   while( (State->time = ++ticks) ) {
 
     if( !(ticks%10000) ) {
-      add_some_enemies(75);
+      add_some_enemies(25+(wave*10));
+      wave++;
     }
 
     // Progress the game one time step
