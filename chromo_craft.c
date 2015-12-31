@@ -80,6 +80,40 @@ static path_t *load_path_file(char *fn)
   return p;
 }
 
+
+static void load_towers_file(char *fn)
+{
+  vector3_t    position;
+  io_bitmap_t  bm;
+  int          i, j;
+  u8b_t        n;
+
+  io_bitmap_load(fn, &bm);
+
+  // Load image of node positions
+  if( bm.w != bm.h || bm.w != TERRAIN_SIZE ) {
+    Error("Towers bitmap must be %dx%d in size.\n", TERRAIN_SIZE, TERRAIN_SIZE);
+  }
+
+  // Scan image and store positions
+  for( j = 0; j < bm.h; ++j ) {
+    for( i = 0; i < bm.w; ++i ) {
+      n = bm.d[(j*TERRAIN_SIZE + i) * 3];
+      if( n != 0 ) {
+	// Add tower.
+	position.s.x = i * TERRAIN_SCALE;
+	position.s.y = j * TERRAIN_SCALE;
+	position.s.z = 0.0;
+	player_add_tower(&State->player, &position);
+	tower_remove_gem(&State->player.towers[State->player.ntowers-1]);
+      }
+    }
+  }
+  
+  io_bitmap_free(&bm);
+}
+
+
 ////////////////////////////////////////////////////////////
 // Sets up the global state to get ready for play
 ////////////////////////////////////////////////////////////
@@ -433,8 +467,11 @@ static void game_loop()
   // Set a path for enemies ...
   State->path = load_path_file("data/bmp/path.bmp");
 
+  // Load tower positions from file..
+  load_towers_file("data/bmp/towers.bmp");
+
   // Add some stuff ...
-  add_some_towers(20,0);
+  //add_some_towers(20,0);
   add_some_enemies(100);
   add_some_gems();
 
