@@ -153,3 +153,18 @@ void game_event_tower_install_gem(tower_t *tower, u32b_t ndx)
   pthread_mutex_unlock(&EventLock);
 }
 
+
+void game_event_tower_remove_gem(tower_t *tower)
+{
+  game_event_init();
+
+  // Fill in new node
+  pthread_mutex_lock(&EventLock);
+
+  game_event_new_node(Events);
+  Events->last->type = GAME_EVENT_TOWER_REMOVE_GEM;
+  vector3_copy(&(tower->position), &(Events->last->tower_install_gem.tpos));
+  
+  pthread_mutex_unlock(&EventLock);
+}
+

@@ -9,6 +9,7 @@
 
 // Game event types
 #define GAME_EVENT_TOWER_INSTALL_GEM 1
+#define GAME_EVENT_TOWER_REMOVE_GEM  2
 
 // Event queue node/queue
 typedef struct str_game_eventq_node_t {
@@ -39,6 +40,7 @@ extern void           game_event_remove(game_eventq_t *node);
 
 // Producers
 extern void game_event_tower_install_gem(tower_t *tower, u32b_t ndx);
+extern void game_event_tower_remove_gem (tower_t *tower);
 #endif
 
 

@@ -8,6 +8,13 @@
 
 ////////////////////////////////////////////////////////////
 
+int vector3_compare(vector3_t *v1, vector3_t *v2)
+{
+  return (v1->s.x == v2->s.x) &&
+         (v1->s.y == v2->s.y) && 
+         (v1->s.z == v2->s.z)    ;
+}
+
 //
 // l = sqrt(pow(v[i],2));
 //

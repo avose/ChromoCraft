@@ -43,26 +43,44 @@ void Bag_Down(widget_t *w, const int x, const int y, const int b)
 
   if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
       (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
-    // Find the closest gem to the mouse.
-    for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
-      if( i != GuiState.mouse_item_ndx ) {
+    // Is there a gem in hand?
+    if( !color_is_black(&(Gem.color)) ) {
+      // There is a gem in hand, transfer to bag.
+      for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
 	switch(Statec->player.bag.items[i].type) {
-	case BAG_ITEM_TYPE_GEM:
-	  // Find position of the gem
-	  xf  = i%3 + (2.0f/(3.0f*2.0f)); 
-	  xf /= 3.0f;
-	  yf  = i/3 + (2.0f/(3.0f*2.0f)); 
-	  yf /= 15.0f;
-	  xs  = ScaleX(w,xf*w->w+w->x);
-	  ys  = ScaleY(w,yf*w->h+w->y);
-	  // Get distance to mouse
-	  d = sqrt((xs-x)*(xs-x) + (ys-y)*(ys-y));
-	  if( d < md ) {
-	    ndx = i;
-	    md  = d;
-	    gem = &(Statec->player.bag.items[i].gem);
-	  }
+	case BAG_ITEM_TYPE_NONE:
+	  // Place hand gem into empty slot.
+	  memcpy(&(Statec->player.bag.items[i].gem), &Gem, sizeof(gem_t));
+	  memset(&Gem, 0, sizeof(gem_t));
+	  Statec->player.bag.items[i].type = BAG_ITEM_TYPE_GEM;
 	  break;
+	}
+	if( color_is_black(&(Gem.color)) ) {
+	  break;
+	}
+      }
+    } else {
+      // No gem in hand; find the closest gem to the mouse..
+      for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
+	if( i != GuiState.mouse_item_ndx ) {
+	  switch(Statec->player.bag.items[i].type) {
+	  case BAG_ITEM_TYPE_GEM:
+	    // Find position of the gem
+	    xf  = i%3 + (2.0f/(3.0f*2.0f)); 
+	    xf /= 3.0f;
+	    yf  = i/3 + (2.0f/(3.0f*2.0f)); 
+	    yf /= 15.0f;
+	    xs  = ScaleX(w,xf*w->w+w->x);
+	    ys  = ScaleY(w,yf*w->h+w->y);
+	    // Get distance to mouse
+	    d = sqrt((xs-x)*(xs-x) + (ys-y)*(ys-y));
+	    if( d < md ) {
+	      ndx = i;
+	      md  = d;
+	      gem = &(Statec->player.bag.items[i].gem);
+	    }
+	    break;
+	  }
 	}
       }
     }
@@ -126,20 +144,21 @@ void Bag_Draw(widget_t *w)
 
   // Draw the items
   for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
-    if( i != GuiState.mouse_item_ndx ) {
-      // Find position of items
-      x  = i%3;
-      xf = x + (2.0f/(3.0f*2.0f)); 
-      xf /= 3.0;
-      y  = i/3;
-      yf = y + (2.0f/(3.0f*2.0f)); 
-      yf /= 15.0;
-      // Figure out item type
-      switch(Statec->player.bag.items[i].type) {
-      case BAG_ITEM_TYPE_GEM:
+    // Find position of items
+    x  = i%3;
+    xf = x + (2.0f/(3.0f*2.0f)); 
+    xf /= 3.0;
+    y  = i/3;
+    yf = y + (2.0f/(3.0f*2.0f)); 
+    yf /= 15.0;
+    // Figure out item type
+    switch(Statec->player.bag.items[i].type) {
+    case BAG_ITEM_TYPE_GEM:
+      if( i != GuiState.mouse_item_ndx ) {
 	Gem_Draw(&(Statec->player.bag.items[i].gem),xf,yf,ratio);
-	break;
+      } else {
       }
+      break;
     }
   }
 

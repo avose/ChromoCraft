@@ -787,10 +787,12 @@ void Gameframe_MouseDown(widget_t *w, int x, int y, int b)
       if( color_is_black(&(Gem.color)) && (ni != -1) ) {
 	// From tower to hand.
 	memcpy(&Gem, &(Statec->player.towers[ni].gem), sizeof(gem_t));
-	memset(&(Statec->player.towers[ni].gem), 0, sizeof(gem_t));
+	//memset(&(Statec->player.towers[ni].gem), 0, sizeof(gem_t));
+	game_event_tower_remove_gem(&(Statec->player.towers[ni]));
       } else if( !color_is_black(&(Gem.color)) && (ni != -1) && color_is_black(&(Statec->player.towers[ni].gem.color))) {
 	// From hand to tower.
 	memcpy(&(Statec->player.towers[ni].gem), &Gem, sizeof(gem_t));
+	//game_event_tower_install_gem(&(Statec->player.towers[ni]), u32b_t ndx);
 	memset(&Gem, 0, sizeof(gem_t));
       } else if( !color_is_black(&(Gem.color)) && (ni != -1) && !color_is_black(&(Statec->player.towers[ni].gem.color))) {
 	// Swap hand<->tower.

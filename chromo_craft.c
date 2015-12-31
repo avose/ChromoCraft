@@ -185,7 +185,7 @@ static void print_player()
 #endif
 
 ////////////////////////////////////////////////////////////
-// Randon initial setup
+// Random initial setup
 ////////////////////////////////////////////////////////////
 
 static void add_some_enemies(u32b_t level)
@@ -327,7 +327,7 @@ static void update_towers()
       State->player.score += State->enemies[i].base_health;
       // Notify GUI of the death
       gui_game_event_kill(State->time,&State->enemies[i]);
-      // Kill it (will move last entry into current; retest current
+      // Kill it (will move last entry into current); retest current
       enemy_kill_enemy(i, State->enemies, &State->nenemies, State->senemies);
     } else {
       // Move on to next entry
@@ -344,8 +344,46 @@ static void update_player()
   }
 }
 
+static void process_events()
+{
+  game_eventq_t *q;
+  int i;
+
+  for(q=game_event_get(NULL); q; q=game_event_get(q)) {
+    // Find event type
+    switch(q->type) {
+    case GAME_EVENT_TOWER_INSTALL_GEM:
+      for(i=0; i<State->player.ntowers; i++) {
+	// Apply event to the tower at the specified location.
+	if( vector3_compare(&(State->player.towers[i].position), &(q->tower_install_gem.tpos)) ) {
+	  tower_install_gem(&(State->player.towers[i]), &(State->player.bag.items[q->tower_install_gem.ndx].gem));
+	  bag_remove_item(&(State->player.bag),q->tower_install_gem.ndx);
+	  break;
+	}
+      }
+      // Remove the event from the queue.
+      game_event_remove(q);
+      break;
+    case GAME_EVENT_TOWER_REMOVE_GEM:
+      for(i=0; i<State->player.ntowers; i++) {
+	// Apply event to the tower at the specified location.
+	if( vector3_compare(&(State->player.towers[i].position), &(q->tower_install_gem.tpos)) ) {
+	  bag_add_gem(&(State->player.bag), &(State->player.towers[i].gem));
+	  tower_remove_gem(&(State->player.towers[i]));
+	  break;
+	}
+      }
+      // Remove the event from the queue.
+      game_event_remove(q);
+      break;
+    }
+  }
+}
+
 void tick()
 {
+  process_events();
+
   update_enemies();
   update_towers();
   update_player();

@@ -30,6 +30,7 @@ typedef union {
 // Interface:
 ////////////////////////////////////////////////////////////
 #ifndef VECTOR_C
+extern int        vector3_compare        (vector3_t *v1, vector3_t *v2);
 extern double     vector3_point_line_dist(vector3_t *x,  vector3_t *l1, vector3_t *l2);
 extern double     vector3_length         (vector3_t *v);
 extern double     vector3_dotprod        (vector3_t *v1, vector3_t *v2);
