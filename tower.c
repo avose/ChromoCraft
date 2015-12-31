@@ -2,6 +2,7 @@
 
 #include "types.h"
 #include "gem.h"
+#include "color.h"
 #include "special.h"
 #include "enemy.h"
 #include "gui_game_event.h"
@@ -58,6 +59,8 @@ void tower_fire_towers(tower_t *towers, const u32b_t ntowers, enemy_t *enemies, 
 void tower_install_gem(tower_t *tower, gem_t *gem)
 {
   memcpy(&tower->gem,gem,sizeof(gem_t));
+  tower->gem.range = (color_area(&(gem->color))/COLOR_MAX_AREA) * 80.0 + 20.0;
+  tower->gem.rate  = (color_area(&(gem->color))/COLOR_MAX_AREA) * 80.0 + 20.0;
 }
 
 void tower_remove_gem(tower_t *tower)

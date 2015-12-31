@@ -296,7 +296,7 @@ static void DrawPath()
   // Draw enemy path
   glEnable(GL_LINE_SMOOTH);
   if( Statec->path ) {
-    glColor3f(0.2f, 0.2f, 0.2f);
+    glColor3f(0.75f, 0.25f, 0.25f);
     glBegin(GL_LINES); 
     for(p=Statec->path; p != Statec->path->last; ) {
       x = (p->position.s.x)/255.0f * 63.0f;

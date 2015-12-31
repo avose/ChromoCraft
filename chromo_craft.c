@@ -230,8 +230,6 @@ static void add_some_towers(u32b_t ntowers, u32b_t level)
       gem.color.s.x = random_rnd(&State->random,level)+1;
       gem.color.s.y = random_rnd(&State->random,level)+1;
       gem.color.s.z = random_rnd(&State->random,level)+1;
-      gem.range     = (color_area(&gem.color)/COLOR_MAX_AREA) * 80.0 + 20.0;
-      gem.rate      = (color_area(&gem.color)/COLOR_MAX_AREA) * 80.0 + 20.0;
       // Install the gem
       tower_install_gem(&State->player.towers[State->player.ntowers-1],&gem);
     }
@@ -243,27 +241,27 @@ static void add_some_gems()
 {
   gem_t g;
 
-  g.color.a[0] = 200;
-  g.color.a[1] = 40;
-  g.color.a[2] = 43;
+  g.color.a[0] = 128;
+  g.color.a[1] = 0;
+  g.color.a[2] = 0;
 
   bag_add_gem(&State->player.bag,&g);
   bag_add_gem(&State->player.bag,&g);
   bag_add_gem(&State->player.bag,&g);
 
-  g.color.a[0] = 32;
-  g.color.a[1] = 22;
-  g.color.a[2] = 43;
-
-  bag_add_gem(&State->player.bag,&g);
-
-  bag_add_gem(&State->player.bag,&g);
-  bag_add_gem(&State->player.bag,&g);
-
-  g.color.a[0] = 32;
+  g.color.a[0] = 0;
   g.color.a[1] = 128;
-  g.color.a[2] = 43;
+  g.color.a[2] = 0;
 
+  bag_add_gem(&State->player.bag,&g);
+  bag_add_gem(&State->player.bag,&g);
+  bag_add_gem(&State->player.bag,&g);
+
+  g.color.a[0] = 0;
+  g.color.a[1] = 0;
+  g.color.a[2] = 128;
+
+  bag_add_gem(&State->player.bag,&g);
   bag_add_gem(&State->player.bag,&g);
   bag_add_gem(&State->player.bag,&g);
 }
@@ -407,7 +405,7 @@ static void game_loop()
   State->path = load_path_file("data/bmp/path.bmp");
 
   // Add some stuff ...
-  add_some_towers(20,255);
+  add_some_towers(20,0);
   add_some_enemies(100);
   add_some_gems();
 
