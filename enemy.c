@@ -130,7 +130,7 @@ void enemy_new_wave(vector3_t *color, const double time, rnd_t *random, enemy_t 
   double         wave_start_time;
   u32b_t         number_to_spawn;
   u32b_t         enemy_spacing;
-  u32b_t         choice;
+  u32b_t         choice,oot;
   u32b_t         i;
 
   // Get a new random distribution if needed
@@ -156,9 +156,17 @@ void enemy_new_wave(vector3_t *color, const double time, rnd_t *random, enemy_t 
 
   // Let's spawn a number of enemies from 10-256 ...
   number_to_spawn = ((u32b_t)(color_area(color)/COLOR_MAX_AREA*255)) + 10;   
+  oot = 1;
+  if( random_U01(random) < .5 ) {
+    oot = 2;
+  }
+  number_to_spawn /= oot;
+  if( number_to_spawn < 1 ) {
+    number_to_spawn = 1;
+  }
 
   // Let's space them apart a random amount from [10,100] ticks...
-  enemy_spacing = random_rnd(random,100-10) + 10;
+  enemy_spacing = random_rnd(random,100-10) + 15;
 
   wave_start_time = time + enemy_spacing;
 
@@ -169,12 +177,15 @@ void enemy_new_wave(vector3_t *color, const double time, rnd_t *random, enemy_t 
 
     // Either one or two colors.
     enemy.color.s.x = enemy.color.s.y = enemy.color.s.z = 1;
-    if( random_U01(random) < .5 ) {
-      // Two colors chosed based on color distribution
-      do {
-	choice = random_drand(random,distribution);
-      } while( enemy.color.a[choice] == color->a[choice] );
-      enemy.color.a[choice] = color->a[choice];
+    if( oot == 2 ) {
+      if( random_U01(random) < .5 ) {
+	// Two colors chosed based on color distribution
+	do {
+	  choice = random_drand(random,distribution);
+	} while( enemy.color.a[choice] == color->a[choice] );
+	// The next dimension is "weaker".
+	enemy.color.a[choice] = color->a[choice]*0.25;
+      }
     }
 
     // One color based on color distribution
@@ -188,6 +199,9 @@ void enemy_new_wave(vector3_t *color, const double time, rnd_t *random, enemy_t 
 
     // The speed of the enemy will be [10,100] based on color area
     enemy.speed = (color_area(&enemy.color)/COLOR_MAX_AREA*50.0) + 5.0;
+    if( random_U01(random) < .5 ) {
+      enemy.speed += 5.0;
+    }
 
     // Set the start time for correct wave spacing
     enemy.start_time = wave_start_time + enemy_spacing*i;

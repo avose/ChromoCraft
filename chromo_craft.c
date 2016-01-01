@@ -273,7 +273,7 @@ static void update_enemy_effects()
 
 }
 
-#define BASE_SPEED 0.020
+#define BASE_SPEED 0.015
 
 static void update_enemies_path()
 {
