@@ -9,7 +9,7 @@
 typedef struct {
   char   *text;     // Text drawn on button
   u32b_t  val;      // Button value
-  u8b_t   sel;      // 1 == selected, 0 == not selected
+  u32b_t   sel;     // 1 == selected, 0 == not selected
   u32b_t *link;     // A pointer link to an int controlled by this button
 } button_gui_t;
 

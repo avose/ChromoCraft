@@ -355,14 +355,8 @@ void Mix_Down(widget_t *w, const int x, const int y, const int b)
 
   if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
       (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
-    // !!avose: TODO / FIXME:
-    //
-    // If a bag gem is selected, merge it with the next one to be clicked.
-    // Don't forget to enable the button's sel flag to draw in red.
-    //
-    // This needs to be a game event to tell the engine about it.
+    // The bag can read the button's sel state, just flip it.
     btn->sel ^= 1;
-    //game_event_mix_gem(gem, GuiState.mouse_item_ndx);
   }
 }
 
@@ -509,9 +503,6 @@ static void LayoutWidgets(glwindow_t *glw)
 	    NULL,
 	    &gf);
 
-  // Bag / Intentory
-  AddWidget(glw, 768, (768-16)/2, 128-8, (768-16)/2+8, Bag_Draw, Bag_KeyPress, Bag_Down, NULL, Bag_MouseMove, NULL, &bag);
-
   // Status / info widget
   AddWidget(glw, 768, (768-16)/4, 128-8, (768-16)/4-8, Stats_Draw, NULL, NULL, NULL, NULL, NULL, &stats);
 
@@ -520,6 +511,10 @@ static void LayoutWidgets(glwindow_t *glw)
   AddWidget(glw, 768, 8+32, 128-8,  24, Button_Draw,    NULL, New_Down,     NULL, NULL, NULL,  &bnew);
   AddWidget(glw, 768, 8+64, 128-8,  24, Button_Draw,    NULL, Mix_Down,     NULL, NULL, NULL,  &bmix);
   AddWidget(glw, 768, 8+96, 128-8,  24, Button_Draw,    NULL, Next_Down,    NULL, NULL, NULL,  &bnext);
+
+  // Bag / Intentory
+  bag.mix_btn_link = &(bmix.sel);
+  AddWidget(glw, 768, (768-16)/2, 128-8, (768-16)/2+8, Bag_Draw, Bag_KeyPress, Bag_Down, NULL, Bag_MouseMove, NULL, &bag);
 
   // Loss Message
   AddWidget(glw, 64, 64, glw->pwidth-128, glw->pheight-128, Loss_Draw, NULL, NULL, NULL, NULL, NULL, NULL);

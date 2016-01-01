@@ -7,7 +7,7 @@
 #include "types.h"
 
 typedef struct {
-  int foo;  // For animation or whatever
+  u32b_t *mix_btn_link;  // Pointer to mix button's sel flag, so we know that button state.
 } bag_gui_t;
 
 ////////////////////////////////////////////////////////////

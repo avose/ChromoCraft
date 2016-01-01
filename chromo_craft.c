@@ -377,7 +377,8 @@ static void update_player()
 static void process_events()
 {
   game_eventq_t *q;
-  int i;
+  gem_t          gem;
+  int            i;
 
   for(q=game_event_get(NULL); q; q=game_event_get(q)) {
     // Find event type
@@ -429,9 +430,21 @@ static void process_events()
       // Remove the event from the queue.
       game_event_remove(q);
       break;
-    case GAME_EVENT_MIX_GEM:
+    case GAME_EVENT_MIX_GEMS:
       // Mix gems in player's bag.
-      // !!avose: TODO / FIXME.
+      if( State->player.mana >= GEM_MIX_MANA_COST ) {
+	// Make new "mixed" gem.
+	gem_mix_gems(&(State->player.bag.items[q->mix_gems.ndx1].gem),
+		     &(State->player.bag.items[q->mix_gems.ndx2].gem),
+		     &gem);
+	// Add new "mixed" gem.
+	bag_add_gem(&(State->player.bag), &gem);
+	// Remove the "parent" gems.
+	bag_remove_item(&(State->player.bag),q->mix_gems.ndx1);
+	bag_remove_item(&(State->player.bag),q->mix_gems.ndx2);
+	// Apply mana cost.
+	State->player.mana -= GEM_MIX_MANA_COST;
+      }
       // Remove the event from the queue.
       game_event_remove(q);
       break;
