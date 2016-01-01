@@ -437,7 +437,6 @@ static void process_events()
 	gem_mix_gems(&(State->player.bag.items[q->mix_gems.ndx1].gem),
 		     &(State->player.bag.items[q->mix_gems.ndx2].gem),
 		     &gem);
-	// Add new "mixed" gem.
 	bag_add_gem(&(State->player.bag), &gem);
 	// Remove the "parent" gems.
 	bag_remove_item(&(State->player.bag),q->mix_gems.ndx1);
@@ -495,7 +494,7 @@ static void game_loop()
   add_some_gems();
 
   // Start the GUI
-  StartGUI("pre-Alpha",((gstate_t*)State)); 
+  StartGUI("v0.0.1",((gstate_t*)State)); 
   UpdateGuiState(((gstate_t*)State));
 
   while( (State->time = ++ticks) ) {
