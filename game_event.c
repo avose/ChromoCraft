@@ -200,6 +200,7 @@ void game_event_create_gem(gem_t *gem)
   pthread_mutex_unlock(&EventLock);
 }
 
+
 void game_event_mix_gem(gem_t *gem, u32b_t ndx)
 {
   game_event_init();
@@ -211,6 +212,20 @@ void game_event_mix_gem(gem_t *gem, u32b_t ndx)
   Events->last->type = GAME_EVENT_MIX_GEM;
   memcpy(&(Events->last->create_gem.gem), gem, sizeof(gem_t));
   Events->last->create_gem.ndx = ndx;
+  
+  pthread_mutex_unlock(&EventLock);
+}
+
+
+void game_event_next_wave()
+{
+  game_event_init();
+
+  // Fill in new node
+  pthread_mutex_lock(&EventLock);
+
+  game_event_new_node(Events);
+  Events->last->type = GAME_EVENT_NEXT_WAVE;
   
   pthread_mutex_unlock(&EventLock);
 }

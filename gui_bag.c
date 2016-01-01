@@ -28,9 +28,6 @@
 #undef GUI_WIDGET
 #include "gui_bag.h"
 
-static double HandX=0.0;
-static double HandY=0.0;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // Button callbacks
@@ -40,6 +37,10 @@ void Bag_Down(widget_t *w, const int x, const int y, const int b)
   gem_t  *gem = NULL;
   int     i,ndx;
   float   xf,yf,xs,ys,d,md = 1000000.0f;
+
+  if( Statec->player.mana < 0 ) {
+    return;
+  }
 
   if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
       (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
@@ -86,6 +87,10 @@ void Bag_Down(widget_t *w, const int x, const int y, const int b)
 
 void Bag_KeyPress(widget_t *w, char key, unsigned int keycode)
 {
+  if( Statec->player.mana < 0 ) {
+    return;
+  }
+
   if( GuiState.mouse_item_ndx != -1 ) {
     GuiState.mouse_item_ndx = -1;
   }
@@ -165,8 +170,9 @@ void Bag_Draw(widget_t *w)
 
 void Bag_MouseMove(widget_t *w, int x, int y)
 {
-  HandX = x;
-  HandY = y;
+  if( Statec->player.mana < 0 ) {
+    return;
+  }
 }
 
 #endif // !GUI_BAG_C

@@ -34,16 +34,34 @@ void Stats_Draw(widget_t *w)
   //stats_gui_t *gf = (stats_gui_t*)w->wd;
   char buf[1024];
 
-  // Draw the mana info:
-  Purple();
-  sprintf(buf,"Score:  %.1lf",Statec->player.score);
+  // Draw the xp info:
+  Yellow();
+  sprintf(buf,"XP:");
   glRasterPos2f(0.1f, 0.1f);
+  printGLf(w->glw->font,"%s",buf);
+  sprintf(buf,"%.1lf",Statec->player.xp);
+  glRasterPos2f(0.4f, 0.1f);
   printGLf(w->glw->font,"%s",buf);
 
   // Draw the mana info:
   Purple();
-  sprintf(buf,"Mana:  %.1lf/%.1lf",Statec->player.mana,Statec->player.base_mana);
+  sprintf(buf,"Mana:");
   glRasterPos2f(0.1f, 0.2f);
+  printGLf(w->glw->font,"%s",buf);
+  sprintf(buf,"%.1lf /",Statec->player.mana);
+  glRasterPos2f(0.4f, 0.2f);
+  printGLf(w->glw->font,"%s",buf);
+  sprintf(buf,"%.0lf",Statec->player.base_mana);
+  glRasterPos2f(0.4f, 0.3f);
+  printGLf(w->glw->font,"%s",buf);
+
+  // Draw the wave info:
+  Green();
+  sprintf(buf,"Wave:");
+  glRasterPos2f(0.1f, 0.4f);
+  printGLf(w->glw->font,"%s",buf);
+  sprintf(buf,"%lu",Statec->wave);
+  glRasterPos2f(0.4f, 0.4f);
   printGLf(w->glw->font,"%s",buf);
 
   // Outline

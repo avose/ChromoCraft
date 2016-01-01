@@ -30,6 +30,7 @@
 #include "gui_gameframe.h"
 #include "gui_bag.h"
 #include "gui_stats.h"
+#include "gui_loss.h"
 
 #include "io_bitmap.h"
 
@@ -327,6 +328,10 @@ void New_Down(widget_t *w, const int x, const int y, const int b)
   //button_gui_t *btn = (button_gui_t*)(w->wd);
   gem_t gem;
   int   i;
+
+  if( Statec->player.mana < 0 ) {
+    return;
+  }
   
   if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
       (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
@@ -344,6 +349,10 @@ void Mix_Down(widget_t *w, const int x, const int y, const int b)
 {
   button_gui_t *btn = (button_gui_t*)(w->wd);
 
+  if( Statec->player.mana < 0 ) {
+    return;
+  }
+
   if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
       (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
     // !!avose: TODO / FIXME:
@@ -354,6 +363,21 @@ void Mix_Down(widget_t *w, const int x, const int y, const int b)
     // This needs to be a game event to tell the engine about it.
     btn->sel ^= 1;
     //game_event_mix_gem(gem, GuiState.mouse_item_ndx);
+  }
+}
+
+void Next_Down(widget_t *w, const int x, const int y, const int b)
+{
+  //button_gui_t *btn = (button_gui_t*)(w->wd);
+
+  if( Statec->player.mana < 0 ) {
+    return;
+  }
+
+  if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
+      (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
+    // Bring on the next wave..
+    game_event_next_wave();
   }
 }
 
@@ -467,9 +491,10 @@ static void DrawWidgets(glwindow_t *glw)
 
 static void LayoutWidgets(glwindow_t *glw)
 {
-  static button_gui_t    bquit = {"Quit",     0, 0, NULL};
-  static button_gui_t    bnew  = {"New Gem",  0, 0, NULL};
-  static button_gui_t    bmix  = {"Mix Gems", 0, 0, NULL};
+  static button_gui_t    bquit  = {"Quit",      0, 0, NULL};
+  static button_gui_t    bnew   = {"New Gem",   0, 0, NULL};
+  static button_gui_t    bmix   = {"Mix Gems",  0, 0, NULL};
+  static button_gui_t    bnext  = {"Next Wave", 0, 0, NULL};
   static gameframe_gui_t gf;
   static bag_gui_t       bag;
   static stats_gui_t     stats;
@@ -494,6 +519,10 @@ static void LayoutWidgets(glwindow_t *glw)
   AddWidget(glw, 768, 8,    128-8,  24, Button_Draw,    NULL, Quit_Down,    NULL, NULL, NULL,  &bquit);
   AddWidget(glw, 768, 8+32, 128-8,  24, Button_Draw,    NULL, New_Down,     NULL, NULL, NULL,  &bnew);
   AddWidget(glw, 768, 8+64, 128-8,  24, Button_Draw,    NULL, Mix_Down,     NULL, NULL, NULL,  &bmix);
+  AddWidget(glw, 768, 8+96, 128-8,  24, Button_Draw,    NULL, Next_Down,    NULL, NULL, NULL,  &bnext);
+
+  // Loss Message
+  AddWidget(glw, 64, 64, glw->pwidth-128, glw->pheight-128, Loss_Draw, NULL, NULL, NULL, NULL, NULL, NULL);
 }
 
 static void HandleEvent(glwindow_t *glw)

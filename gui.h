@@ -25,6 +25,7 @@ typedef struct str_gstate_t {
   u32b_t      nenemies;     // Number of enemies
   u32b_t      senemies;     // Size of enemy array
   path_t     *path;         // Path the enemies follow
+  u64b_t      wave;         // Enemy wave number
 
   rnd_t       random;       // Random number generator state
 
@@ -147,6 +148,7 @@ extern void Purple();
 extern void Blue();
 extern void White();
 extern void Green();
+extern void Black();
 
 extern float ScaleX(widget_t *w, const float x);
 extern float ScaleY(widget_t *w, const float y);

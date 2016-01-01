@@ -17,7 +17,7 @@ typedef struct {
 
   bag_t    bag;          // Inventory
 
-  double   score;        // Player score (points)
+  double   xp;           // Player xp (points/score)
 } player_t;
 
 ////////////////////////////////////////////////////////////

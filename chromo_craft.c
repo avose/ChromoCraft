@@ -225,7 +225,7 @@ static void print_player()
 static void add_some_enemies(u32b_t level)
 {
   vector3_t  color;
-  u32b_t     i;
+  u32b_t     i,n;
 
   // Get a random color for this wave based on the level
   color.s.x = random_rnd(&State->random,level-1)+2;
@@ -233,10 +233,11 @@ static void add_some_enemies(u32b_t level)
   color.s.z = random_rnd(&State->random,level-1)+2;
   
   // Add a wave
+  n = State->nenemies;
   enemy_new_wave(&color, State->time, &State->random, &State->enemies, &State->nenemies, &State->senemies);
 
   // Update position of each enemy
-  for(i=0; i<State->nenemies; i++) {
+  for(i=n; i<State->nenemies; i++) {
     vector3_copy(&State->path->position, &State->enemies[i].position);
     State->enemies[i].path = State->path->next;
   }
@@ -301,9 +302,8 @@ static void update_enemies_path()
       }
     } else if( State->enemies[i].path == State->path ) {
       // Enemy reached last path node!
-      // Remove points from score and mana.
-      State->player.score -= State->enemies[i].health;
-      State->player.mana  -= State->enemies[i].health*0.1;
+      // Remove points from mana.
+      State->player.mana -= State->enemies[i].health*0.1;
       // Notify GUI of the death.
       gui_game_event_kill(State->time,&State->enemies[i]);
       // Kill it (will move last entry into current); retest current.
@@ -318,8 +318,25 @@ static void update_enemies_path()
 
 #undef BASE_SPEED
 
+static void start_wave()
+{
+  // Start a new wave.
+  add_some_enemies(25+(State->wave*10));
+  State->wave++;
+}
+
 static void update_enemies()
 {
+  static u32b_t ticks=0;
+
+  // Start a new wave if needed.
+  ticks++;
+  if( ticks >= 10000 ) {
+    ticks = 0;
+    start_wave();
+  }
+
+  // Update the enemies.
   update_enemy_effects();
   update_enemies_path();
 }
@@ -334,9 +351,9 @@ static void update_towers()
   // Officially kill all those with negative health
   for(i=0; i<State->nenemies; ) {
     if( State->enemies[i].health < 0 ) {
-      // Add points to score
-      State->player.score += State->enemies[i].base_health;
-      State->player.mana  += State->enemies[i].base_health*0.1;
+      // Add points to xp
+      State->player.xp   += State->enemies[i].base_health         + State->wave;
+      State->player.mana += ((State->enemies[i].base_health)*0.1) + State->wave;
       // Notify GUI of the death
       gui_game_event_kill(State->time,&State->enemies[i]);
       // Kill it (will move last entry into current); retest current
@@ -350,6 +367,7 @@ static void update_towers()
 
 static void update_player()
 {
+  State->player.base_mana = 100 + ((((int)State->player.xp)/1000)*100);
   State->player.mana += 0.001;
   if( State->player.mana > State->player.base_mana ) {
     State->player.mana = State->player.base_mana;
@@ -417,6 +435,15 @@ static void process_events()
       // Remove the event from the queue.
       game_event_remove(q);
       break;
+    case GAME_EVENT_NEXT_WAVE:
+      // Bring next wave early.
+      start_wave();
+      // Give player a bonus.
+      State->player.mana += 10;
+      State->player.xp   += 100;
+      // Remove the event from the queue.
+      game_event_remove(q);
+      break;
     }
   }
 }
@@ -442,7 +469,7 @@ u64b_t get_time()
 static void game_loop()
 {
   u64b_t         ticks = 0;
-  u64b_t         t1,t2,sleep,wave=0;
+  u64b_t         t1,t2,sleep;
 
   // Set a path for enemies ...
   State->path = load_path_file("data/bmp/path.bmp");
@@ -451,7 +478,7 @@ static void game_loop()
   load_towers_file("data/bmp/towers.bmp");
 
   // Add some stuff ...
-  add_some_enemies(25);
+  start_wave();
   add_some_gems();
 
   // Start the GUI
@@ -459,12 +486,6 @@ static void game_loop()
   UpdateGuiState(((gstate_t*)State));
 
   while( (State->time = ++ticks) ) {
-
-    if( !(ticks%10000) ) {
-      add_some_enemies(25+(wave*10));
-      wave++;
-    }
-
     // Progress the game one time step
     t1 = get_time();
     tick();

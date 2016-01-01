@@ -7,6 +7,7 @@
 #include "enemy.h"
 #include "tower.h"
 
+
 // Game event types
 #define GAME_EVENT_NONE              0
 
@@ -16,6 +17,9 @@
 
 #define GAME_EVENT_CREATE_GEM        4
 #define GAME_EVENT_MIX_GEM           5
+
+#define GAME_EVENT_NEXT_WAVE         6
+
 
 // Event queue node/queue
 typedef struct str_game_eventq_node_t {
@@ -56,6 +60,8 @@ extern void game_event_tower_swap_gem   (tower_t *tower, u32b_t ndx);
 
 extern void game_event_create_gem(gem_t *gem);
 extern void game_event_mix_gem   (gem_t *gem, u32b_t ndx);
+
+extern void game_event_next_wave();
 #endif
 
 

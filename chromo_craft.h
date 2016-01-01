@@ -20,6 +20,7 @@ typedef struct str_state_t {
   u32b_t      nenemies;     // Number of enemies
   u32b_t      senemies;     // Size of enemy array
   path_t     *path;         // Path the enemies follow
+  u64b_t      wave;         // Enemy wave number
 
   rnd_t       random;       // Random number generator state
 

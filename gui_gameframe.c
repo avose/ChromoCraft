@@ -763,6 +763,10 @@ void Gameframe_MouseDown(widget_t *w, int x, int y, int b)
   double d,nd=100000;
   int    i,ni=-1;
 
+  if( Statec->player.mana < 0 ) {
+    return;
+  }
+
   // Check bounds
   if( (x >= ScaleX(w, w->x)) && (x <= ScaleX(w, w->x+w->w)) && 
       (y >= ScaleY(w, w->y)) && (y <= ScaleY(w, w->y+w->h))    ) {
@@ -816,6 +820,10 @@ void Gameframe_MouseUp(widget_t *w, int x, int y, int b)
 {
   gameframe_gui_t *gf = (gameframe_gui_t*)w->wd;
 
+  if( Statec->player.mana < 0 ) {
+    return;
+  }
+
   if( gf->md == MOUSE_RIGHT ) {
     // Apply distance moved to the rotation
     gf->rotx += (((float)y)-gf->mdy) / 3.1415f / 2.0f;
@@ -833,6 +841,10 @@ void Gameframe_MouseUp(widget_t *w, int x, int y, int b)
 void Gameframe_MouseMove(widget_t *w, int x, int y)
 {
   gameframe_gui_t *gf = (gameframe_gui_t*)w->wd;
+
+  if( Statec->player.mana < 0 ) {
+    return;
+  }
 
   if( gf->md == MOUSE_RIGHT ) {
     // Apply distance moved to the rotation

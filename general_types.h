@@ -7,8 +7,8 @@ typedef unsigned short int      u16b_t;
 typedef short int               s16b_t;
 typedef unsigned int            u32b_t;
 typedef int                     s32b_t;
-typedef unsigned long long int  u64b_t;
-typedef long long int           s64b_t;
+typedef unsigned long int       u64b_t;
+typedef long int                s64b_t;
 
 typedef struct timeval timeval_t;
 
