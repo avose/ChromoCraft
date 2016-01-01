@@ -355,8 +355,13 @@ void Mix_Down(widget_t *w, const int x, const int y, const int b)
 
   if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
       (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
-    // The bag can read the button's sel state, just flip it.
-    btn->sel ^= 1;
+    // Don't even let the button be selected if not enough mana or no gem in hand.
+    if( (Statec->player.mana >= GEM_MIX_MANA_COST) && (GuiState.mouse_item_ndx != -1) ) {
+      // The bag can read the button's sel state, just flip it.
+      btn->sel ^= 1;
+    } else {
+      btn->sel = 0;
+    }
   }
 }
 

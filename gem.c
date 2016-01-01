@@ -34,7 +34,7 @@ void gem_mix_gems(gem_t *gem1, gem_t *gem2, gem_t *gem_out)
   // Just in case things are too large.
   for(i=0; i<3; i++) {
     if( gem_out->color.a[i] > 255 ) {
-      gem_out->color.a[1] = 255;
+      gem_out->color.a[i] = 255;
     }
   }
 }

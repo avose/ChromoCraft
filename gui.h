@@ -134,7 +134,7 @@ extern void UpdateGuiState(gstate_t *s);
 extern guistate_t        GuiState;
 extern gstate_t         *Stateg,*Statec,*Statep;
 extern pthread_mutex_t   StateLock;
-extern gem_t             Gem;
+extern vector3_t         HandPos;
 
 extern void   printGLf(GLuint font, const char *fmt, ...);
 extern u32b_t LoadTexture(char *fn);

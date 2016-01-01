@@ -28,16 +28,56 @@
 #undef GUI_WIDGET
 #include "gui_bag.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
-// Button callbacks
+static gem_t* bag_get_nearest_gem(widget_t *w, int x, int y, int *ndx)
+{
+  gem_t *gem = NULL;
+  float xf,yf,xs,ys,d,md = 1000000.0f;
+  int   i;
+
+  // Find the closest gem to the mouse..
+  *ndx = -1;
+  for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
+    // Skip the current selection.
+    if( i != GuiState.mouse_item_ndx ) {
+      switch(Statec->player.bag.items[i].type) {
+      case BAG_ITEM_TYPE_GEM:
+	// Find position of the gem
+	xf  = i%3 + (2.0f/(3.0f*2.0f)); 
+	xf /= 3.0f;
+	yf  = i/3 + (2.0f/(3.0f*2.0f)); 
+	yf /= 15.0f;
+	xs  = ScaleX(w,xf*w->w+w->x);
+	ys  = ScaleY(w,yf*w->h+w->y);
+	// Get distance to mouse
+	d = sqrt((xs-x)*(xs-x) + (ys-y)*(ys-y));
+	if( d < md ) {
+	  *ndx = i;
+	  md   = d;
+	  gem  = &(Statec->player.bag.items[i].gem);
+	}
+	break;
+      }
+    }
+  }
+
+  // Return the gem if we got one.
+  return gem;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+//
+// Mouse callbacks
+//
 
 void Bag_Down(widget_t *w, const int x, const int y, const int b)
 {
   bag_gui_t *bag = (bag_gui_t*)(w->wd);
   gem_t     *gem = NULL;
-  int        i,ndx;
-  float      xf,yf,xs,ys,d,md = 1000000.0f;
+  int        ndx;
 
   if( Statec->player.mana < 0 ) {
     return;
@@ -51,62 +91,18 @@ void Bag_Down(widget_t *w, const int x, const int y, const int b)
 	// Mix button is selected..
 	if( GuiState.mouse_item_ndx != -1 ) {
 	  // Find the closest gem to the mouse..
-	  for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
-	    if( i != GuiState.mouse_item_ndx ) {
-	      switch(Statec->player.bag.items[i].type) {
-	      case BAG_ITEM_TYPE_GEM:
-		// Find position of the gem
-		xf  = i%3 + (2.0f/(3.0f*2.0f)); 
-		xf /= 3.0f;
-		yf  = i/3 + (2.0f/(3.0f*2.0f)); 
-		yf /= 15.0f;
-		xs  = ScaleX(w,xf*w->w+w->x);
-		ys  = ScaleY(w,yf*w->h+w->y);
-		// Get distance to mouse
-		d = sqrt((xs-x)*(xs-x) + (ys-y)*(ys-y));
-		if( d < md ) {
-		  ndx = i;
-		  md  = d;
-		  gem = &(Statec->player.bag.items[i].gem);
-		}
-		break;
-	      }
-	    }
-	  }
+	  gem = bag_get_nearest_gem(w,x,y,&ndx);
 	  if( gem ) {
 	    // Add a game event to mix the gems.
 	    game_event_mix_gems(ndx, GuiState.mouse_item_ndx);
-	    // Disable mix button selection.
+	    // Disable mix button selection and mouse/bag selection.
 	    *(bag->mix_btn_link) = 0;
-	    // Disable mouse/bag selection.
 	    GuiState.mouse_item_ndx = -1;
 	  }
 	}
       } else {
 	// No modifiers, do a regular select: find the closest gem to the mouse..
-	for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
-	  if( i != GuiState.mouse_item_ndx ) {
-	    switch(Statec->player.bag.items[i].type) {
-	    case BAG_ITEM_TYPE_GEM:
-	      // Find position of the gem
-	      xf  = i%3 + (2.0f/(3.0f*2.0f)); 
-	      xf /= 3.0f;
-	      yf  = i/3 + (2.0f/(3.0f*2.0f)); 
-	      yf /= 15.0f;
-	      xs  = ScaleX(w,xf*w->w+w->x);
-	      ys  = ScaleY(w,yf*w->h+w->y);
-	      // Get distance to mouse
-	      d = sqrt((xs-x)*(xs-x) + (ys-y)*(ys-y));
-	      if( d < md ) {
-		ndx = i;
-		md  = d;
-		gem = &(Statec->player.bag.items[i].gem);
-	      }
-	      break;
-	    }
-	  }
-	}
-	// Pick up the gem.
+	gem = bag_get_nearest_gem(w,x,y,&ndx);
 	if( gem ) {
 	  // Pick up gem into mouse (escape key / other event will drop)
 	  GuiState.mouse_item_ndx = ndx;
@@ -121,7 +117,24 @@ void Bag_Down(widget_t *w, const int x, const int y, const int b)
   }
 }
 
+void Bag_MouseMove(widget_t *w, int x, int y)
+{
+  //bag_gui_t *bag = (bag_gui_t*)(w->wd);
+  //gem_t     *gem = NULL;
+  //int        ndx;
+
+  if( Statec->player.mana < 0 ) {
+    return;
+  }
+
+  //if( (*(bag->mix_btn_link) != 1) && (GuiState.mouse_item_ndx == -1) ) {
+    // Only do this if no mods.
+  //}
+}
+
+//
 // Key callbacks
+//
 
 void Bag_KeyPress(widget_t *w, char key, unsigned int keycode)
 {
@@ -171,8 +184,11 @@ void Gem_Draw(gem_t *gem, double xf, double yf, double ratio)
 
 void Bag_Draw(widget_t *w)
 {
-  u32b_t i,x,y;
-  double xf,yf,ratio=w->w/((double)w->h);
+  bag_gui_t *bag = (bag_gui_t*)(w->wd);
+  u32b_t     i,x,y;
+  double     xf,yf,ratio=w->w/((double)w->h);
+  gem_t     *gem = NULL;
+  int        ndx;
 
   // Draw the items
   for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
@@ -202,15 +218,61 @@ void Bag_Draw(widget_t *w)
   glVertex2f(1.0f,1.0f);
   glVertex2f(1.0f,0.0f);
   glEnd();
+
+  // Only if no mods.
+  if( (*(bag->mix_btn_link) == 0) && (GuiState.mouse_item_ndx == -1) ) {
+    if( (HandPos.s.x > ScaleX(w,w->x)) && (HandPos.s.x < ScaleX(w,w->x+w->w)) && 
+	(HandPos.s.y > ScaleY(w,w->y)) && (HandPos.s.y < ScaleY(w,w->y+w->h))     ) {
+      // Find nearest gem.
+      gem = bag_get_nearest_gem(w,HandPos.s.x,HandPos.s.y,&ndx);
+      if( gem ) {
+	// Draw the hover box for the current hover gem.
+	glPushMatrix();
+	glLoadIdentity();
+	xf = HandPos.s.x;
+	yf = HandPos.s.y;
+	if( xf+64 > w->glw->width ) {
+	  xf -= (xf+64) - w->glw->width;
+	}
+	if( yf+64 > w->glw->height ) {
+	  yf -= (yf+64) - w->glw->height;
+	}
+	glTranslatef(xf, yf, 0.0f);
+	// Background
+	glColor4ub(0,0,0,220);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBegin(GL_POLYGON);
+	glVertex2f(0.0f,0.0f);
+	glVertex2f(0.0f,64.0f);
+	glVertex2f(64.0f,64.0f);
+	glVertex2f(64.0f,0.0f);
+	glEnd();
+	glDisable(GL_BLEND);
+	// Text
+	Red();
+	glRasterPos2f(strlen("r: ")*6.0f/2.0f, 16.0f);
+	printGLf(w->glw->font,"r: %.1lf",gem->color.s.x);
+	Green();
+	glRasterPos2f(strlen("g: ")*6.0f/2.0f, 16.0f+16.0f*1);
+	printGLf(w->glw->font,"g: %.1lf",gem->color.s.y);
+	Blue();
+	glRasterPos2f(strlen("b: ")*6.0f/2.0f, 16.0f+16.0f*2);
+	printGLf(w->glw->font,"b: %.1lf",gem->color.s.z);
+	// Outline
+	Yellow();
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(0.0f,0.0f);
+	glVertex2f(0.0f,64.0f);
+	glVertex2f(64.0f,64.0f);
+	glVertex2f(64.0f,0.0f);
+	glEnd();
+	glPopMatrix();
+      }
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void Bag_MouseMove(widget_t *w, int x, int y)
-{
-  if( Statec->player.mana < 0 ) {
-    return;
-  }
-}
 
 #endif // !GUI_BAG_C
