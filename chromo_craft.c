@@ -304,8 +304,8 @@ static void update_enemies_path()
       // Enemy reached last path node!
       // Remove points from mana.
       State->player.mana -= State->enemies[i].health*0.1;
-      // Notify GUI of the death.
-      gui_game_event_kill(State->time,&State->enemies[i]);
+      // Notify GUI of the player hit.
+      gui_game_event_hit(State->time,&State->enemies[i]);
       // Kill it (will move last entry into current); retest current.
       enemy_kill_enemy(i, State->enemies, &State->nenemies, State->senemies);
     } else {

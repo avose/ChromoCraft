@@ -456,7 +456,7 @@ static void DrawEnemies()
 static void DrawEvents(widget_t *w)
 {
   gui_eventq_t *q,*t;
-  float         h,r,color[4];
+  float         h,r,color[4],sizem;
   float         white[4]={1.0f,1.0f,1.0f,1.0f},black[4]={0.0f,0.0f,0.0f,0.0f};
   int           i,x,y,slices=GGF_GEM_SLICES,stacks=GGF_GEM_STACKS; 
   GLfloat       light_position[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -474,6 +474,7 @@ static void DrawEvents(widget_t *w)
 
   // Draw everything on the event list
   for(q=gui_game_event_get(NULL); q; q=gui_game_event_get(q)) {
+    sizem = 1.0;
     // Find event type
     switch(q->type) {
     case GUI_GAME_EVENT_FIRE:
@@ -563,6 +564,10 @@ static void DrawEvents(widget_t *w)
 	q = t;
       }
       break;
+    case GUI_GAME_EVENT_HIT:
+      // Enemy hit the player event.
+      // Fall through, but draw larger.
+      sizem = 3.0;
     case GUI_GAME_EVENT_KILL:
       // Enemy death event
       if( !q->flags ) {
@@ -584,6 +589,7 @@ static void DrawEvents(widget_t *w)
       y = (q->kill.enemy.s.y)/255.0f * 63.0f;
       h = Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.005;
       r = 4.0f * (1.0f-(Statec->time-q->time)/GGF_KILL_TIME);
+      r *= sizem;
       for(i=0; i<3; i++) {
 	glPushMatrix();
 	glTranslatef(q->kill.enemy.s.x/255.0f, h, q->kill.enemy.s.y/255.0f);
@@ -609,6 +615,7 @@ static void DrawEvents(widget_t *w)
       // Draw a small sphere at center
       glPushMatrix();
       r = 1.25f / 255.0f * (1.0f-(Statec->time-q->time)/GGF_KILL_TIME);
+      r *= sizem;
       x = (q->kill.enemy.s.x)/255.0f * 63.0f;
       y = (q->kill.enemy.s.y)/255.0f * 63.0f;
       h = Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.005;

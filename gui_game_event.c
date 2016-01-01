@@ -170,3 +170,18 @@ void gui_game_event_fire(u64b_t time, tower_t *tower, enemy_t *enemy, double dmg
   
   pthread_mutex_unlock(&EventLock);
 }
+
+void gui_game_event_hit(u64b_t time, enemy_t *enemy)
+{
+  gui_game_event_init();
+
+  // Fill in new node
+  pthread_mutex_lock(&EventLock);
+
+  gui_game_event_new_node(Events);
+  Events->last->type = GUI_GAME_EVENT_HIT;
+  vector3_copy(&enemy->position, &(Events->last->hit.enemy));
+  Events->last->time = time;
+  
+  pthread_mutex_unlock(&EventLock);
+}

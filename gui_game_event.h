@@ -8,8 +8,10 @@
 #include "tower.h"
 
 // Game event types
+#define GUI_GAME_EVENT_NONE 0
 #define GUI_GAME_EVENT_FIRE 1
 #define GUI_GAME_EVENT_KILL 2
+#define GUI_GAME_EVENT_HIT  3
 
 // Event queue node/queue
 typedef struct str_gui_eventq_node_t {
@@ -32,6 +34,10 @@ typedef struct str_gui_eventq_node_t {
     struct {
       vector3_t enemy;
     } kill;
+    // Struct for a enemy hit player event
+    struct {
+      vector3_t enemy;
+    } hit;
   };
 } gui_eventq_node_t, gui_eventq_t;
 
@@ -47,6 +53,7 @@ extern void          gui_game_event_remove(gui_eventq_t *node);
 // Producers
 extern void      gui_game_event_kill(u64b_t time, enemy_t *enemy);
 extern void      gui_game_event_fire(u64b_t time, tower_t *tower, enemy_t *enemy, double dmg);
+extern void      gui_game_event_hit (u64b_t time, enemy_t *enemy);
 #endif
 
 
