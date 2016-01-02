@@ -45,10 +45,12 @@ static gem_t* bag_get_nearest_gem(widget_t *w, int x, int y, int *ndx)
       switch(Statec->player.bag.items[i].type) {
       case BAG_ITEM_TYPE_GEM:
 	// Find position of the gem
-	xf  = i%3 + (2.0f/(3.0f*2.0f)); 
-	xf /= 3.0f;
-	yf  = i/3 + (2.0f/(3.0f*2.0f)); 
-	yf /= 15.0f;
+	xf = i%3;
+	xf = xf/3.0;
+	xf = xf + (1.0f/6.0f); 
+	yf = i/3;
+	yf = yf/15.0;
+	yf = yf + (1.0f/30.0f); 
 	xs  = ScaleX(w,xf*w->w+w->x);
 	ys  = ScaleY(w,yf*w->h+w->y);
 	// Get distance to mouse
@@ -67,6 +69,8 @@ static gem_t* bag_get_nearest_gem(widget_t *w, int x, int y, int *ndx)
   return gem;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Event Callbacks
 ////////////////////////////////////////////////////////////////////////////////
 
 //
@@ -148,6 +152,65 @@ void Bag_KeyPress(widget_t *w, char key, unsigned int keycode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Draw routines.
+////////////////////////////////////////////////////////////////////////////////
+
+static int BuildBagBG()
+{
+  int   bgtex,cl,i;
+  float a,b;
+
+  // I use these values to slightly tweak the textures positions.
+  a = 0.0f;
+  b = 1.0f;
+
+  // I guess we can load this here..
+  bgtex = LoadTexture("data/bmp/BagBG.bmp"); 
+
+  // Start a list
+  glNewList(cl=glGenLists(1),GL_COMPILE);
+
+  // Draw cloth BG.
+  glColor3f(0.5f,0.5f,0.5f);
+  glBindTexture(GL_TEXTURE_2D,bgtex);
+  glBegin(GL_QUADS);
+  glTexCoord2f(a,b); glVertex3i(0.0, 1.0, 1.0);
+  glTexCoord2f(a,a); glVertex3i(0.0, 0.0, 1.0);
+  glTexCoord2f(b,a); glVertex3i(1.0, 0.0, 1.0);
+  glTexCoord2f(b,b); glVertex3i(1.0, 1.0, 1.0);
+  glEnd();
+
+  // Draw an item grid.
+  glDisable(GL_TEXTURE_2D);
+  glColor4ub(0,0,0,96);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  for(i=0; i<2; i++) {
+    glBegin(GL_QUADS);
+    glVertex2f((1.0/3.0)*(i+1)+0.015, 0.0);
+    glVertex2f((1.0/3.0)*(i+1)-0.015, 0.0);
+    glVertex2f((1.0/3.0)*(i+1)-0.015, 1.0);
+    glVertex2f((1.0/3.0)*(i+1)+0.015, 1.0);
+    glEnd();   
+  }
+  for(i=0; i<14; i++) {
+    glBegin(GL_QUADS);
+    glVertex2f(0.0, (1.0/15.0)*(i+1)+0.005);
+    glVertex2f(0.0, (1.0/15.0)*(i+1)-0.005);
+    glVertex2f(1.0, (1.0/15.0)*(i+1)-0.005);
+    glVertex2f(1.0, (1.0/15.0)*(i+1)+0.005);
+    glEnd();   
+  }
+  glDisable(GL_BLEND);
+  glEnable(GL_TEXTURE_2D);
+
+  // End the list.
+  glEndList();
+
+  // Return the new call list
+  return cl;
+}
+
 
 void Gem_Draw(gem_t *gem, double xf, double yf, double ratio)
 {
@@ -185,20 +248,34 @@ void Gem_Draw(gem_t *gem, double xf, double yf, double ratio)
 void Bag_Draw(widget_t *w)
 {
   bag_gui_t *bag = (bag_gui_t*)(w->wd);
+  static int bg  = 0;
   u32b_t     i,x,y;
   double     xf,yf,ratio=w->w/((double)w->h);
   gem_t     *gem = NULL;
   int        ndx;
 
+  // Init if needed.. I guess this can be here.
+  if( bg == 0 ) {
+    glEnable(GL_TEXTURE_2D);
+    bg = BuildBagBG();
+    glDisable(GL_TEXTURE_2D);
+  }
+
+  // Draw background.
+  glEnable(GL_TEXTURE_2D);
+  White();
+  glCallList(bg);
+  glDisable(GL_TEXTURE_2D);
+
   // Draw the items
   for(i=0; i<(sizeof(Statec->player.bag.items)/sizeof(item_t)); i++) {
     // Find position of items
     x  = i%3;
-    xf = x + (2.0f/(3.0f*2.0f)); 
-    xf /= 3.0;
+    xf = x/3.0;
+    xf = xf + (1.0f/6.0f); 
     y  = i/3;
-    yf = y + (2.0f/(3.0f*2.0f)); 
-    yf /= 15.0;
+    yf = y/15.0;
+    yf = yf + (1.0f/30.0f); 
     // Figure out item type
     switch(Statec->player.bag.items[i].type) {
     case BAG_ITEM_TYPE_GEM:
@@ -226,6 +303,16 @@ void Bag_Draw(widget_t *w)
       // Find nearest gem.
       gem = bag_get_nearest_gem(w,HandPos.s.x,HandPos.s.y,&ndx);
       if( gem ) {
+	// Highlight the gem.
+	xf = ndx%3;
+	yf = ndx/3;
+	glColor3ub(128,128,0);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(xf/3.0f,     yf/15.0f);
+	glVertex2f(xf/3.0f,     (yf+1)/15.0f);
+	glVertex2f((xf+1)/3.0f, (yf+1)/15.0f);
+	glVertex2f((xf+1)/3.0f, yf/15.0f);
+	glEnd();
 	// Draw the hover box for the current hover gem.
 	glPushMatrix();
 	glLoadIdentity();
