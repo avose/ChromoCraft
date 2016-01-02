@@ -410,8 +410,8 @@ static void DrawTowers(widget_t *w)
   
   // Mark closest tower to mouse pos.
   ni = -1;
-  x = HandPos.s.x;
-  y = HandPos.s.y;
+  x = GuiState.hand_pos.s.x;
+  y = GuiState.hand_pos.s.y;
   for(i=0; i<Statec->player.ntowers; i++) {
     d = sqrt((Statec->player.towers[i].scr_pos.s.x-x)*(Statec->player.towers[i].scr_pos.s.x-x) +
 	     ((ScaleY(w,w->h)-Statec->player.towers[i].scr_pos.s.y)-y)*((ScaleY(w,w->h)-Statec->player.towers[i].scr_pos.s.y)-y));
@@ -434,20 +434,30 @@ static void DrawTowers(widget_t *w)
     xf = Statec->player.towers[ni].scr_pos.s.x;
     yf = Statec->player.towers[ni].scr_pos.s.y;
     yf = w->glw->height - yf;
-    glColor3ub(128,128,0);
-    glBegin(GL_LINE_LOOP);
-    glVertex2f(xf-24, yf-24);
-    glVertex2f(xf-24, yf+24);
-    glVertex2f(xf+24, yf+24);
-    glVertex2f(xf+24, yf-24);
-    glEnd();
+    if( !color_is_black(&(Statec->player.towers[ni].gem.color)) ) {
+      glColor3ub(128,128,0);
+      glBegin(GL_LINE_LOOP);
+      glVertex2f(xf-24, yf-24);
+      glVertex2f(xf-24, yf+24);
+      glVertex2f(xf+24, yf+24);
+      glVertex2f(xf+24, yf-24);
+      glEnd();
+    } else {
+      glColor3ub(128,128,0);
+      glBegin(GL_LINE_LOOP);
+      glVertex2f(xf-16, yf-16);
+      glVertex2f(xf-16, yf+16);
+      glVertex2f(xf+16, yf+16);
+      glVertex2f(xf+16, yf-16);
+      glEnd();
+    }
     glPopMatrix();
     glPushMatrix();
     glLoadIdentity();
     if( !color_is_black(&(Statec->player.towers[ni].gem.color)) ) {
       // Draw the hover box for the current hover tower.
-      xf = HandPos.s.x;
-      yf = HandPos.s.y;
+      xf = GuiState.hand_pos.s.x;
+      yf = GuiState.hand_pos.s.y;
       if( xf+64 > w->glw->width ) {
 	xf -= (xf+64) - w->glw->width;
       }
@@ -496,8 +506,9 @@ static void DrawTowers(widget_t *w)
 
 static void DrawEnemies()
 {
-  float r,color[4],white[4]={1.0f,1.0f,1.0f,1.0f},black[4]={0.0f,0.0f,0.0f,0.0f};
-  int   i,x,y,slices=16,stacks=16;
+  vector3_t sc;
+  float     r,color[4],white[4]={1.0f,1.0f,1.0f,1.0f},black[4]={0.0f,0.0f,0.0f,0.0f};
+  int       i,x,y,slices=16,stacks=16;
 
   static int         init=1;
   static GLUquadric *qdrc;
@@ -533,6 +544,8 @@ static void DrawEnemies()
 		 Statec->terrain.d[(x*64+y)*3] / 255.0f / 4.0f + 0.005,
 		 (Statec->enemies[i].position.s.y)/255.0f);
     gluSphere(qdrc, r, slices, stacks);
+    Project(&sc);
+    memcpy(&(Statec->enemies[i].scr_pos), &sc, sizeof(vector3_t));
     glPopMatrix();
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
   }
@@ -652,6 +665,8 @@ static void DrawEvents(widget_t *w)
       break;
     case GUI_GAME_EVENT_HIT:
       // Enemy hit the player event.
+      vector3_copy(&(q->hit.enemy),&(GuiState.enemy_hit_pos));
+      vector3_copy(&(q->hit.color),&(GuiState.enemy_hit_color));
       // Fall through, but draw larger.
       sizem = 3.0;
     case GUI_GAME_EVENT_KILL:

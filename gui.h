@@ -34,7 +34,10 @@ typedef struct str_gstate_t {
 
 // GUI's internal (non-"game") state
 typedef struct str_guistate_t {
-  u32b_t mouse_item_ndx;     // Current item "held" by the mouse
+  u32b_t     mouse_item_ndx;  // Current item "held" by the mouse
+  vector3_t  hand_pos;        // Last position of mouse / hand
+  vector3_t  enemy_hit_pos;   // Where the enemy hit the player
+  vector3_t  enemy_hit_color; // Color of the enemy who hit
 } guistate_t;
 
 ////////////////////////////////////////////////////////////
@@ -134,7 +137,6 @@ extern void UpdateGuiState(gstate_t *s);
 extern guistate_t        GuiState;
 extern gstate_t         *Stateg,*Statec,*Statep;
 extern pthread_mutex_t   StateLock;
-extern vector3_t         HandPos;
 
 extern void   printGLf(GLuint font, const char *fmt, ...);
 extern u32b_t LoadTexture(char *fn);

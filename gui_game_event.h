@@ -32,11 +32,12 @@ typedef struct str_gui_eventq_node_t {
     } fire;
     // Struct for a enemy kill event
     struct {
-      vector3_t enemy;
+      vector3_t enemy; // Position
     } kill;
     // Struct for a enemy hit player event
     struct {
-      vector3_t enemy;
+      vector3_t enemy; // Position
+      vector3_t color; // Color
     } hit;
   };
 } gui_eventq_node_t, gui_eventq_t;

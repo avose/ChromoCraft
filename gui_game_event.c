@@ -180,7 +180,8 @@ void gui_game_event_hit(u64b_t time, enemy_t *enemy)
 
   gui_game_event_new_node(Events);
   Events->last->type = GUI_GAME_EVENT_HIT;
-  vector3_copy(&enemy->position, &(Events->last->hit.enemy));
+  vector3_copy(&(enemy->position), &(Events->last->hit.enemy));
+  vector3_copy(&(enemy->color), &(Events->last->hit.color));
   Events->last->time = time;
   
   pthread_mutex_unlock(&EventLock);

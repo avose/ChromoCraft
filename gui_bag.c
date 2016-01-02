@@ -298,10 +298,10 @@ void Bag_Draw(widget_t *w)
 
   // Only if no mods.
   if( (*(bag->mix_btn_link) == 0) && (GuiState.mouse_item_ndx == -1) ) {
-    if( (HandPos.s.x > ScaleX(w,w->x)) && (HandPos.s.x < ScaleX(w,w->x+w->w)) && 
-	(HandPos.s.y > ScaleY(w,w->y)) && (HandPos.s.y < ScaleY(w,w->y+w->h))     ) {
+    if( (GuiState.hand_pos.s.x > ScaleX(w,w->x)) && (GuiState.hand_pos.s.x < ScaleX(w,w->x+w->w)) && 
+	(GuiState.hand_pos.s.y > ScaleY(w,w->y)) && (GuiState.hand_pos.s.y < ScaleY(w,w->y+w->h))     ) {
       // Find nearest gem.
-      gem = bag_get_nearest_gem(w,HandPos.s.x,HandPos.s.y,&ndx);
+      gem = bag_get_nearest_gem(w,GuiState.hand_pos.s.x,GuiState.hand_pos.s.y,&ndx);
       if( gem ) {
 	// Highlight the gem.
 	xf = ndx%3;
@@ -316,8 +316,8 @@ void Bag_Draw(widget_t *w)
 	// Draw the hover box for the current hover gem.
 	glPushMatrix();
 	glLoadIdentity();
-	xf = HandPos.s.x;
-	yf = HandPos.s.y;
+	xf = GuiState.hand_pos.s.x;
+	yf = GuiState.hand_pos.s.y;
 	if( xf+64 > w->glw->width ) {
 	  xf -= (xf+64) - w->glw->width;
 	}

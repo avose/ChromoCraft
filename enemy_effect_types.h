@@ -42,6 +42,7 @@ struct str_enemy_t {
   double               base_health;  // Base HP of the enemy
   double               speed;        // Movement rate
   vector3_t            position;     // Position of the enemy
+  vector3_t            scr_pos;      // Position (2D on screen)
   vector3_t            color;        // Color of the enemy
   path_t               *path;        // Current path node
 

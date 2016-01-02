@@ -47,7 +47,6 @@ static int           Done;
 gstate_t         *Stateg,*Statec,*Statep;
 pthread_mutex_t   StateLock=PTHREAD_MUTEX_INITIALIZER;
 guistate_t        GuiState;
-vector3_t         HandPos;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -446,8 +445,8 @@ void Draw_Hand(glwindow_t *glw)
       GuiState.mouse_item_ndx = -1;
     } else {
       // Bag index (thus hand contents) are valid gem.
-      xf = HandPos.s.x / glw->width;
-      yf = HandPos.s.y / glw->height;
+      xf = GuiState.hand_pos.s.x / glw->width;
+      yf = GuiState.hand_pos.s.y / glw->height;
       glDisable(GL_DEPTH_TEST);
       glScalef(glw->width,glw->height,0.0f);
       glTranslatef(xf, yf, 1.0f);
@@ -567,8 +566,8 @@ static void HandleEvent(glwindow_t *glw)
       }
       break;
     case MotionNotify:
-      HandPos.s.x = xe.xbutton.x;
-      HandPos.s.y = xe.xbutton.y;
+      GuiState.hand_pos.s.x = xe.xbutton.x;
+      GuiState.hand_pos.s.y = xe.xbutton.y;
       for(i=0; i<nWidgets; i++) {
 	if( Widgets[i].mousemove )
 	  (*Widgets[i].mousemove)(&Widgets[i],xe.xbutton.x, xe.xbutton.y);
