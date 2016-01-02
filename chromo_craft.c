@@ -231,7 +231,6 @@ static void add_some_enemies(u32b_t level)
   color.s.x = random_rnd(&State->random,level-1)+2;
   color.s.y = random_rnd(&State->random,level-1)+2;
   color.s.z = random_rnd(&State->random,level-1)+2;
-  
   // Add a wave
   n = State->nenemies;
   enemy_new_wave(&color, State->time, &State->random, &State->enemies, &State->nenemies, &State->senemies);

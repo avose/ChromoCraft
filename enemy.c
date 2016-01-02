@@ -133,6 +133,17 @@ void enemy_new_wave(vector3_t *color, const double time, rnd_t *random, enemy_t 
   u32b_t         choice,oot;
   u32b_t         i;
 
+  // Trim the color.
+  if( color->s.x > 255 ) {
+    color->s.x = 255;
+  }
+  if( color->s.y > 255 ) {
+    color->s.y = 255;
+  }
+  if( color->s.z > 255 ) {
+    color->s.z = 255;
+  }
+
   // Get a new random distribution if needed
   if( !distribution ) {
     distribution = random_allocdist(3);
