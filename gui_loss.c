@@ -33,8 +33,19 @@
 
 void Loss_Draw(widget_t *w)
 {
+  static vector3_t color;
+  static double    xp;
+  static int       first_neg=1;
+  char             buf[1024];
+
   if( Statec->player.mana >= 0 ) {
     return;
+  } else {
+    if( first_neg == 1 ) {
+      vector3_copy(&(GuiState.enemy_hit_color), &color);
+      xp = Statec->player.xp;
+      first_neg = 0;
+    }
   }
 
   glDisable(GL_DEPTH_TEST);
@@ -60,8 +71,16 @@ void Loss_Draw(widget_t *w)
 
   // Draw message text
   White();
-  glRasterPos2f(0.5f-((strlen("You Lose!! Lolol!!")*6.0f/2.0f)/ScaleX(w,w->w)), 0.5f+4.0f/ScaleY(w,w->h));
-  printGLf(w->glw->font,"%s","You Lose!! Lolol!!");
+  sprintf(buf,"You Lose!! Lolol!!");
+  glRasterPos2f(0.5f-((strlen(buf)*6.0f/2.0f)/ScaleX(w,w->w)), 0.5f+4.0f/ScaleY(w,w->h));
+  printGLf(w->glw->font,"%s",buf);
+  sprintf(buf,"XP: %.1lf",xp);
+  glRasterPos2f(0.5f-((strlen(buf)*6.0f/2.0f)/ScaleX(w,w->w)), 0.55f+4.0f/ScaleY(w,w->h));
+  printGLf(w->glw->font,"%s",buf);
+  sprintf(buf,"Killed By: (%.0lf,%.0lf,%.0lf)",color.s.x,color.s.y,color.s.z);
+  glRasterPos2f(0.5f-((strlen(buf)*6.0f/2.0f)/ScaleX(w,w->w)), 0.6f+4.0f/ScaleY(w,w->h));
+  printGLf(w->glw->font,"%s",buf);
+
 
   glEnable(GL_DEPTH_TEST);
 }

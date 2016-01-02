@@ -29,10 +29,56 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static int BuildStatsBG()
+{
+  int   bgtex,cl;
+  float a,b;
+
+  // I use these values to slightly tweak the textures positions.
+  a = 0.0f;
+  b = 1.0f;
+
+  // I guess we can load this here..
+  bgtex = LoadTexture("data/bmp/StatsBG.bmp"); 
+
+  // Start a list
+  glNewList(cl=glGenLists(1),GL_COMPILE);
+
+  // Draw cloth BG.
+  glColor3f(0.5f,0.5f,0.5f);
+  glBindTexture(GL_TEXTURE_2D,bgtex);
+  glBegin(GL_QUADS);
+  glTexCoord2f(a,b); glVertex3i(0.0, 1.0, 1.0);
+  glTexCoord2f(a,a); glVertex3i(0.0, 0.0, 1.0);
+  glTexCoord2f(b,a); glVertex3i(1.0, 0.0, 1.0);
+  glTexCoord2f(b,b); glVertex3i(1.0, 1.0, 1.0);
+  glEnd();
+
+  // End the list.
+  glEndList();
+
+  // Return the new call list
+  return cl;
+}
+
 void Stats_Draw(widget_t *w)
 {
   //stats_gui_t *gf = (stats_gui_t*)w->wd;
-  char buf[1024];
+  static int bg  = 0;
+  char       buf[1024];
+
+  // Init if needed.. I guess this can be here.
+  if( bg == 0 ) {
+    glEnable(GL_TEXTURE_2D);
+    bg = BuildStatsBG();
+    glDisable(GL_TEXTURE_2D);
+  }
+
+  // Draw background.
+  glEnable(GL_TEXTURE_2D);
+  White();
+  glCallList(bg);
+  glDisable(GL_TEXTURE_2D);
 
   // Draw the xp info:
   Yellow();
