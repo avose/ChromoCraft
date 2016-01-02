@@ -343,10 +343,11 @@ static void Project(vector3_t *outv)
   outv->s.z = winZ;
 }
 
-static void DrawTowers()
+static void DrawTowers(widget_t *w)
 {
   float      r,color[4],white[4]={1.0f,1.0f,1.0f,1.0f},black[4]={0.0f,0.0f,0.0f,0.0f};
-  int        i,x,y,slices=GGF_GEM_SLICES,stacks=GGF_GEM_STACKS;
+  double     d,nd=10000000,xf,yf;
+  int        i,x,y,slices=GGF_GEM_SLICES,stacks=GGF_GEM_STACKS,ni;
   vector3_t  sc;
 
   static int         init=1;
@@ -405,6 +406,91 @@ static void DrawTowers()
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color);
     gluCylinder(qdrc, r/3.0f*1.0f, r/3.0f*2.0f, 0.035, slices, stacks);
     glPopMatrix();
+  }
+  
+  // Mark closest tower to mouse pos.
+  ni = -1;
+  x = HandPos.s.x;
+  y = HandPos.s.y;
+  for(i=0; i<Statec->player.ntowers; i++) {
+    d = sqrt((Statec->player.towers[i].scr_pos.s.x-x)*(Statec->player.towers[i].scr_pos.s.x-x) +
+	     ((ScaleY(w,w->h)-Statec->player.towers[i].scr_pos.s.y)-y)*((ScaleY(w,w->h)-Statec->player.towers[i].scr_pos.s.y)-y));
+    if( d < nd ) {
+      nd = d;
+      ni = i;
+    }
+  }
+  if( ni != -1 ) {
+    // Draw this in 2D.
+    glDisable(GL_LIGHTING);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    ViewPort2D(w->glw);
+    glMatrixMode(GL_MODELVIEW);
+    // Highlight the tower.
+    glLoadIdentity();
+    xf = Statec->player.towers[ni].scr_pos.s.x;
+    yf = Statec->player.towers[ni].scr_pos.s.y;
+    yf = w->glw->height - yf;
+    glColor3ub(128,128,0);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(xf-24, yf-24);
+    glVertex2f(xf-24, yf+24);
+    glVertex2f(xf+24, yf+24);
+    glVertex2f(xf+24, yf-24);
+    glEnd();
+    glPopMatrix();
+    glPushMatrix();
+    glLoadIdentity();
+    if( !color_is_black(&(Statec->player.towers[ni].gem.color)) ) {
+      // Draw the hover box for the current hover tower.
+      xf = HandPos.s.x;
+      yf = HandPos.s.y;
+      if( xf+64 > w->glw->width ) {
+	xf -= (xf+64) - w->glw->width;
+      }
+      if( yf+64 > w->glw->height ) {
+	yf -= (yf+64) - w->glw->height;
+      }
+      glTranslatef(xf, yf, 0.0f);
+      // Background
+      glColor4ub(0,0,0,220);
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glBegin(GL_POLYGON);
+      glVertex2f(0.0f,0.0f);
+      glVertex2f(0.0f,64.0f);
+      glVertex2f(64.0f,64.0f);
+      glVertex2f(64.0f,0.0f);
+      glEnd();
+      glDisable(GL_BLEND);
+      // Text
+      Red();
+      glRasterPos2f(strlen("r: ")*6.0f/2.0f, 16.0f);
+      printGLf(w->glw->font,"r: %.1lf",Statec->player.towers[ni].gem.color.s.x);
+      Green();
+      glRasterPos2f(strlen("g: ")*6.0f/2.0f, 16.0f+16.0f*1);
+      printGLf(w->glw->font,"g: %.1lf",Statec->player.towers[ni].gem.color.s.y);
+      Blue();
+      glRasterPos2f(strlen("b: ")*6.0f/2.0f, 16.0f+16.0f*2);
+      printGLf(w->glw->font,"b: %.1lf",Statec->player.towers[ni].gem.color.s.z);
+      // Outline
+      Yellow();
+      glBegin(GL_LINE_LOOP);
+      glVertex2f(0.0f,0.0f);
+      glVertex2f(0.0f,64.0f);
+      glVertex2f(64.0f,64.0f);
+      glVertex2f(64.0f,0.0f);
+      glEnd();
+    }
+    // Restore matricies.
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    glEnable(GL_LIGHTING);
   }
 }
 
@@ -729,14 +815,14 @@ void Gameframe_Draw(widget_t *w)
   // Draw ground
   DrawGround();
 
-  // Draw towers
-  DrawTowers();
-
   // Draw enemy path
   DrawPath();
 
   // Draw enemies
   DrawEnemies();
+
+  // Draw towers
+  DrawTowers(w);
 
   // Disable lighting
   for(i=1; i<gl_nlights; i++) {
