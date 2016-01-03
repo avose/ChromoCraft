@@ -6,10 +6,6 @@
 
 #include "types.h"
 
-typedef struct {
-  u32b_t *mix_btn_link;  // Pointer to mix button's sel flag, so we know that button state.
-} bag_gui_t;
-
 ////////////////////////////////////////////////////////////
 // For files other than gui_bag.c
 #ifndef GUI_BAG_C

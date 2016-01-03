@@ -344,26 +344,6 @@ void New_Down(widget_t *w, const int x, const int y, const int b)
   }
 }
 
-void Mix_Down(widget_t *w, const int x, const int y, const int b)
-{
-  button_gui_t *btn = (button_gui_t*)(w->wd);
-
-  if( Statec->player.mana < 0 ) {
-    return;
-  }
-
-  if( (x > ScaleX(w,w->x)) && (x < ScaleX(w,w->x+w->w)) && 
-      (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
-    // Don't even let the button be selected if not enough mana or no gem in hand.
-    if( (Statec->player.mana >= GEM_MIX_MANA_COST) && (GuiState.mouse_item_ndx != -1) ) {
-      // The bag can read the button's sel state, just flip it.
-      btn->sel ^= 1;
-    } else {
-      btn->sel = 0;
-    }
-  }
-}
-
 void Next_Down(widget_t *w, const int x, const int y, const int b)
 {
   //button_gui_t *btn = (button_gui_t*)(w->wd);
@@ -491,10 +471,8 @@ static void LayoutWidgets(glwindow_t *glw)
 {
   static button_gui_t    bquit  = {"Quit",      0, 0, NULL};
   static button_gui_t    bnew   = {"New Gem",   0, 0, NULL};
-  static button_gui_t    bmix   = {"Mix Gems",  0, 0, NULL};
   static button_gui_t    bnext  = {"Next Wave", 0, 0, NULL};
   static gameframe_gui_t gf;
-  static bag_gui_t       bag;
   static stats_gui_t     stats;
 
   // Main game frame
@@ -513,12 +491,10 @@ static void LayoutWidgets(glwindow_t *glw)
   // Buttons
   AddWidget(glw, 768, 8,    128-8,  24, Button_Draw,    NULL, Quit_Down,    NULL, NULL, NULL,  &bquit);
   AddWidget(glw, 768, 8+32, 128-8,  24, Button_Draw,    NULL, New_Down,     NULL, NULL, NULL,  &bnew);
-  AddWidget(glw, 768, 8+64, 128-8,  24, Button_Draw,    NULL, Mix_Down,     NULL, NULL, NULL,  &bmix);
-  AddWidget(glw, 768, 8+96, 128-8,  24, Button_Draw,    NULL, Next_Down,    NULL, NULL, NULL,  &bnext);
+  AddWidget(glw, 768, 8+64, 128-8,  24, Button_Draw,    NULL, Next_Down,    NULL, NULL, NULL,  &bnext);
 
   // Bag / Intentory
-  bag.mix_btn_link = &(bmix.sel);
-  AddWidget(glw, 768, (768-16)/2, 128-8, (768-16)/2+8, Bag_Draw, Bag_KeyPress, Bag_Down, NULL, Bag_MouseMove, NULL, &bag);
+  AddWidget(glw, 768, (768-16)/2, 128-8, (768-16)/2+8, Bag_Draw, Bag_KeyPress, Bag_Down, NULL, Bag_MouseMove, NULL, NULL);
 
   // Loss Message
   AddWidget(glw, 64, 64, glw->pwidth-128, glw->pheight-128, Loss_Draw, NULL, NULL, NULL, NULL, NULL, NULL);

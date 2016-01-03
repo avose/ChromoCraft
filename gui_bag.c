@@ -28,7 +28,6 @@
 #undef GUI_WIDGET
 #include "gui_bag.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static gem_t* bag_get_nearest_gem(widget_t *w, int x, int y, int *ndx)
@@ -44,23 +43,23 @@ static gem_t* bag_get_nearest_gem(widget_t *w, int x, int y, int *ndx)
     if( i != GuiState.mouse_item_ndx ) {
       switch(Statec->player.bag.items[i].type) {
       case BAG_ITEM_TYPE_GEM:
-	// Find position of the gem
-	xf = i%3;
-	xf = xf/3.0;
-	xf = xf + (1.0f/6.0f); 
-	yf = i/3;
-	yf = yf/15.0;
-	yf = yf + (1.0f/30.0f); 
-	xs  = ScaleX(w,xf*w->w+w->x);
-	ys  = ScaleY(w,yf*w->h+w->y);
-	// Get distance to mouse
-	d = sqrt((xs-x)*(xs-x) + (ys-y)*(ys-y));
-	if( d < md ) {
-	  *ndx = i;
-	  md   = d;
-	  gem  = &(Statec->player.bag.items[i].gem);
-	}
-	break;
+        // Find position of the gem
+        xf = i%3;
+        xf = xf/3.0;
+        xf = xf + (1.0f/6.0f); 
+        yf = i/3;
+        yf = yf/15.0;
+        yf = yf + (1.0f/30.0f); 
+        xs  = ScaleX(w,xf*w->w+w->x);
+        ys  = ScaleY(w,yf*w->h+w->y);
+        // Get distance to mouse
+        d = sqrt((xs-x)*(xs-x) + (ys-y)*(ys-y));
+        if( d < md && ISCLOSE(d) ) {
+          *ndx = i;
+          md   = d;
+          gem  = &(Statec->player.bag.items[i].gem);
+        }
+        break;
       }
     }
   }
@@ -79,7 +78,6 @@ static gem_t* bag_get_nearest_gem(widget_t *w, int x, int y, int *ndx)
 
 void Bag_Down(widget_t *w, const int x, const int y, const int b)
 {
-  bag_gui_t *bag = (bag_gui_t*)(w->wd);
   gem_t     *gem = NULL;
   int        ndx;
 
@@ -91,26 +89,23 @@ void Bag_Down(widget_t *w, const int x, const int y, const int b)
       (y > ScaleY(w,w->y)) && (y < ScaleY(w,w->y+w->h))     ) {
     switch(b) {
     case MOUSE_LEFT:
-      if( *(bag->mix_btn_link) == 1 ) {
-	// Mix button is selected..
-	if( GuiState.mouse_item_ndx != -1 ) {
-	  // Find the closest gem to the mouse..
-	  gem = bag_get_nearest_gem(w,x,y,&ndx);
-	  if( gem ) {
-	    // Add a game event to mix the gems.
-	    game_event_mix_gems(ndx, GuiState.mouse_item_ndx);
-	    // Disable mix button selection and mouse/bag selection.
-	    *(bag->mix_btn_link) = 0;
-	    GuiState.mouse_item_ndx = -1;
-	  }
-	}
+      // If we have a gem selected, and we are close to another gem, mix them.
+      // Otherwise, add the selected gem back into the bag.
+      if ( GuiState.mouse_item_ndx != -1 ) {
+        gem = bag_get_nearest_gem(w,x,y,&ndx);
+        if ( gem ) {
+          // Add a game event to mix the gems.
+          game_event_mix_gems(ndx, GuiState.mouse_item_ndx);
+        }
+        // Always deselect the gem, even if we didn't mix
+        GuiState.mouse_item_ndx = -1;
       } else {
-	// No modifiers, do a regular select: find the closest gem to the mouse..
-	gem = bag_get_nearest_gem(w,x,y,&ndx);
-	if( gem ) {
-	  // Pick up gem into mouse (escape key / other event will drop)
-	  GuiState.mouse_item_ndx = ndx;
-	}
+        // No gem selected, do a regular select: find the closest gem to the mouse..
+        gem = bag_get_nearest_gem(w,x,y,&ndx);
+        if( gem ) {
+          // Pick up gem into mouse (escape key / other event will drop)
+          GuiState.mouse_item_ndx = ndx;
+        }
       }
       break;
     case MOUSE_RIGHT:
@@ -123,17 +118,12 @@ void Bag_Down(widget_t *w, const int x, const int y, const int b)
 
 void Bag_MouseMove(widget_t *w, int x, int y)
 {
-  //bag_gui_t *bag = (bag_gui_t*)(w->wd);
   //gem_t     *gem = NULL;
   //int        ndx;
 
   if( Statec->player.mana < 0 ) {
     return;
   }
-
-  //if( (*(bag->mix_btn_link) != 1) && (GuiState.mouse_item_ndx == -1) ) {
-    // Only do this if no mods.
-  //}
 }
 
 //
@@ -247,7 +237,6 @@ void Gem_Draw(gem_t *gem, double xf, double yf, double ratio)
 
 void Bag_Draw(widget_t *w)
 {
-  bag_gui_t *bag = (bag_gui_t*)(w->wd);
   static int bg  = 0;
   u32b_t     i,x,y;
   double     xf,yf,ratio=w->w/((double)w->h);
@@ -296,8 +285,8 @@ void Bag_Draw(widget_t *w)
   glVertex2f(1.0f,0.0f);
   glEnd();
 
-  // Only if no mods.
-  if( (*(bag->mix_btn_link) == 0) && (GuiState.mouse_item_ndx == -1) ) {
+  // Only if no gems selected.
+  if( GuiState.mouse_item_ndx == -1 ) {
     if( (GuiState.hand_pos.s.x > ScaleX(w,w->x)) && (GuiState.hand_pos.s.x < ScaleX(w,w->x+w->w)) && 
 	(GuiState.hand_pos.s.y > ScaleY(w,w->y)) && (GuiState.hand_pos.s.y < ScaleY(w,w->y+w->h))     ) {
       // Find nearest gem.
