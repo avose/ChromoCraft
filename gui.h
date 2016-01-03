@@ -79,10 +79,12 @@ typedef struct str_guistate_t {
 #define F11       95
 #define F12       96
 
-// Defines a min distance the cursor needs to be away from an object
+// Defines a min/max distance the cursor needs to be away from an object
 // to select it
 #define MIN_SELECT_DIST 10.0
+#define MAX_SELECT_DIST 100.0
 #define ISCLOSE(d) ((d) <= MIN_SELECT_DIST ? 1:0)
+#define ISFAR(d) ((d) <= MAX_SELECT_DIST ? 1:0)
 
 // Holds what is needed to manage an opengl enabled window
 typedef struct {

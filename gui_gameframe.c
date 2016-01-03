@@ -415,7 +415,7 @@ static void DrawTowers(widget_t *w)
   for(i=0; i<Statec->player.ntowers; i++) {
     d = sqrt((Statec->player.towers[i].scr_pos.s.x-x)*(Statec->player.towers[i].scr_pos.s.x-x) +
 	     ((ScaleY(w,w->h)-Statec->player.towers[i].scr_pos.s.y)-y)*((ScaleY(w,w->h)-Statec->player.towers[i].scr_pos.s.y)-y));
-    if( d < nd ) {
+    if( d < nd && ISFAR(d) ) {
       nd = d;
       ni = i;
     }
