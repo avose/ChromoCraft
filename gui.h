@@ -163,11 +163,14 @@ extern float ScaleX(widget_t *w, const float x);
 extern float ScaleY(widget_t *w, const float y);
 extern void  GuiExit();
 
-#define NUM_SOURCES 3
-extern ALuint al_sources[NUM_SOURCES];
-#define AL_MUSIC al_sources[0]
-#define AL_FIRE  al_sources[1]
-#define AL_KILL  al_sources[2]
+#define NUM_SOURCES 4
+#define NUM_BUFFERS 4
+extern ALuint  al_buffers[NUM_BUFFERS];
+extern ALuint  al_sources[NUM_SOURCES];
+#define AL_MUSIC   al_sources[0]
+#define AL_FIRE    al_sources[1]
+#define AL_KILL    al_sources[2]
+#define AL_TRIUMPH al_sources[3]
 
 
 #endif // GUI_WIDGET

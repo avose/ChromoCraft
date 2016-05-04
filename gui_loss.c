@@ -27,23 +27,97 @@
 #undef GUI_WIDGET
 #include "gui_loss.h"
 
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
+#define HS_FILEN "./.chromocraft"
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+static double high_score(double xp)
+{
+  FILE  *f;
+  char   line[1024],tag[1024],mtag[1024];
+  double tm,txp,mxp,mtm;
+  int    i;
+
+  // Open high-score file.
+  if( !(f=fopen(HS_FILEN, "r+")) ) {
+    Warn("high_score(): Error opening high-score file!\n");
+    if( !(f=fopen(HS_FILEN, "w+")) ) {
+      Error("high_score(): Error creating high-score file!\n");
+    }
+  }
+
+  // Parse the file.
+  mtm = 0;
+  mxp = 0;
+  while( fgets(line,sizeof(line),f) != NULL ) {
+    sscanf(line,"%lf %lf %s\n",&tm,&txp,tag);
+    if( txp > mxp )   {
+      mxp = txp;
+      mtm = tm;
+      strcpy(mtag,tag);
+    }
+  }
+  
+  // Check for new high score and write to file.
+  if( xp > mxp ) {
+    mxp = xp;
+    mtm = time(NULL);
+    strcpy(mtag,getenv("USER"));
+    for(i=0; i<strlen(mtag); i++){
+      if( mtag[i] == ' ' ) {
+	mtag[i] = '_';
+      }
+    }
+    fprintf(f,"%lf %lf %s\n",mtm,mxp,mtag);
+  }
+
+  // Close and cleanup
+  fclose(f);
+
+  // Return the max high score so far.
+  return mxp;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 void Loss_Draw(widget_t *w)
 {
   static vector3_t color;
-  static double    xp;
+  static double    xp,hxp;
   static int       first_neg=1;
   char             buf[1024];
 
-  if( Statec->player.mana >= 0 ) {
+  
+  // Detect first "death" event.
+  if( (Statec->player.mana >= 0) && (first_neg == 1) ) {
+    // Still alive, so this widget remains hidden.
     return;
   } else {
+    // First time we found a loss event.
     if( first_neg == 1 ) {
       vector3_copy(&(GuiState.enemy_hit_color), &color);
       xp = Statec->player.xp;
+      // Stop default music.
+      alSourceStop(AL_MUSIC);
+      if( alGetError() != AL_NO_ERROR ) {
+	Warn("Error stopping background music.\n");
+      }
+      // Read high-score file.
+      hxp = high_score(xp);
+      if( hxp == xp ) {
+	alSourcePlay(AL_TRIUMPH);
+	if( alGetError() != AL_NO_ERROR ) {
+	  Warn("Error starting triumph music.\n");
+	}
+      }
       first_neg = 0;
     }
   }
@@ -71,7 +145,11 @@ void Loss_Draw(widget_t *w)
 
   // Draw message text
   White();
-  sprintf(buf,"You Lose!! Lolol!!");
+  if( hxp == xp ) {
+    sprintf(buf,"You Lose!! Lolol!! - High Score!!");
+  } else {
+    sprintf(buf,"You Lose!! Lolol!! - Low Score.. (%lf < %lf)",xp,hxp);
+  }
   glRasterPos2f(0.5f-((strlen(buf)*6.0f/2.0f)/ScaleX(w,w->w)), 0.5f+4.0f/ScaleY(w,w->h));
   printGLf(w->glw->font,"%s",buf);
   sprintf(buf,"XP: %.1lf",xp);

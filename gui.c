@@ -51,12 +51,13 @@ guistate_t        GuiState;
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#define AL_MUSIC al_sources[0]
-#define AL_FIRE  al_sources[1]
-#define AL_KILL  al_sources[2]
+#define AL_MUSIC   al_sources[0]
+#define AL_FIRE    al_sources[1]
+#define AL_KILL    al_sources[2]
+#define AL_TRIUMPH al_sources[3]
 
-#define NUM_BUFFERS 3
-#define NUM_SOURCES 3
+#define NUM_BUFFERS 4
+#define NUM_SOURCES 4
 #define NUM_ENVIRONMENTS 1
 
 ALfloat al_listenerPos[]={0.0,0.0,4.0};
@@ -83,6 +84,7 @@ static void initoal()
   al_buffers[0] = alutCreateBufferFromFile("data/wav/ninja2.wav");
   al_buffers[1] = alutCreateBufferFromFile("data/wav/fire.wav");
   al_buffers[2] = alutCreateBufferFromFile("data/wav/kill.wav");
+  al_buffers[3] = alutCreateBufferFromFile("data/wav/triumph.wav");
 
   // Get sources
   alGetError();
