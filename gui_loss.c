@@ -19,6 +19,7 @@
 #include <pthread.h>
 #include <math.h> 
 #include <signal.h>
+#include <pwd.h>
 
 #include "types.h"
 #include "util.h"
@@ -31,57 +32,117 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#define HS_FILEN "./.chromocraft"
+#define HS_FILEN ".chromocraft"
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
-static double high_score(double xp)
+typedef struct st_high_score_t {
+  char   tag[1024];
+  double time;
+  double xp;
+} high_score_t;
+
+
+static int cmp_high_scores(const void *a, const void *b)
 {
-  FILE  *f;
-  char   line[1024],tag[1024],mtag[1024];
-  double tm,txp,mxp,mtm;
-  int    i;
+  high_score_t *hsa = (high_score_t*)a;
+  high_score_t *hsb = (high_score_t*)b;
+
+  if( hsa->xp < hsb->xp ) {
+    return 1;
+  }
+  if( hsa->xp > hsb->xp ) {
+    return -1;
+  }
+  return 0;
+}
+
+
+static int high_score(double xp, high_score_t hxp[10])
+{
+  high_score_t  *hs=NULL;
+  struct passwd *pw;
+  FILE          *f;
+  char           line[1024],tag[1024],path[1024];
+  double         tm,txp;
+  int            i,j,nhs,hss=0;
+
+  // Insane that fopen() doesn't support paths with "~"
+  // in them, so we have to do it manually..
+  if( !(pw = getpwuid(getuid())) ) {
+    Error("high_score(): Error finding users's home directory.\n");
+  }
+  sprintf(path,"%s/%s",pw->pw_dir,HS_FILEN);
 
   // Open high-score file.
-  if( !(f=fopen(HS_FILEN, "r+")) ) {
+  if( !(f=fopen(path, "r+")) ) {
+    perror("high_score()");
     Warn("high_score(): Error opening high-score file!\n");
-    if( !(f=fopen(HS_FILEN, "w+")) ) {
+    if( !(f=fopen(path, "w+")) ) {
+      perror("high_score()");
       Error("high_score(): Error creating high-score file!\n");
     }
   }
 
+  // Clear the HS list we will return to caler.
+  memset(hxp,0,10*sizeof(high_score_t));
+
   // Parse the file.
-  mtm = 0;
-  mxp = 0;
+  nhs = 0;
   while( fgets(line,sizeof(line),f) != NULL ) {
-    sscanf(line,"%lf %lf %s\n",&tm,&txp,tag);
-    if( txp > mxp )   {
-      mxp = txp;
-      mtm = tm;
-      strcpy(mtag,tag);
+    // Parse the line
+    if( sscanf(line,"%lf %lf %s\n",&tm,&txp,tag) != 3 ) {
+      Error("high_score(): Error parsing line in high-score file!\n");
     }
+    // Add to list of high scores
+    if( !(hs=(high_score_t*)realloc(hs,(nhs+1)*sizeof(high_score_t))) ) {
+      Error("high_score(): Failed to grow list of high scores by one.\n");
+    }
+    strcpy(hs[nhs].tag,tag);
+    hs[nhs].time = tm;
+    hs[nhs].xp   = txp;
+    nhs++;
+  }
+
+  // Sort the array of scores we read in
+  if( nhs ) {
+    qsort(hs, nhs, sizeof(high_score_t), cmp_high_scores);
   }
   
   // Check for new high score and write to file.
-  if( xp > mxp ) {
-    mxp = xp;
-    mtm = time(NULL);
-    strcpy(mtag,getenv("USER"));
-    for(i=0; i<strlen(mtag); i++){
-      if( mtag[i] == ' ' ) {
-	mtag[i] = '_';
+  if( !nhs || (xp > hs[0].xp) ) {
+    hss = 1;
+    strcpy(tag,getenv("USER"));
+    for(i=0; i<strlen(tag); i++){
+      if( tag[i] == ' ' ) {
+	tag[i] = '_';
       }
     }
-    fprintf(f,"%lf %lf %s\n",mtm,mxp,mtag);
+    tm = time(NULL);
+    fprintf(f,"%lf %lf %s\n",tm,xp,tag);
+  }
+
+  // Copy top ten (less if aren't that many) to output array.
+  if( hss ) {
+    strcpy(hxp[0].tag,tag);
+    hxp[0].time = tm;
+    hxp[0].xp   = xp;
+    i = 1;
+  } else {
+    i = 0;
+  }
+  for(j=0; (j<nhs) && (i<10); i++,j++) {
+    memcpy(&(hxp[i]),&(hs[j]),sizeof(high_score_t));
   }
 
   // Close and cleanup
   fclose(f);
+  free(hs);
 
-  // Return the max high score so far.
-  return mxp;
+  // Return if a new high score was set.
+  return hss;
 }
 
 
@@ -90,10 +151,12 @@ static double high_score(double xp)
 
 void Loss_Draw(widget_t *w)
 {
-  static vector3_t color;
-  static double    xp,hxp;
-  static int       first_neg=1;
-  char             buf[1024];
+  static high_score_t hxp[10];
+  static vector3_t    color;
+  static double       xp;
+  static int          first_neg=1,hss=0;
+  char                buf[1024];
+  int                 i;
 
   
   // Detect first "death" event.
@@ -111,11 +174,18 @@ void Loss_Draw(widget_t *w)
 	Warn("Error stopping background music.\n");
       }
       // Read high-score file.
-      hxp = high_score(xp);
-      if( hxp == xp ) {
+      hss = high_score(xp,hxp);
+      if( hss ) {
+	// We made a new high-score! Play the triumph song!
 	alSourcePlay(AL_TRIUMPH);
 	if( alGetError() != AL_NO_ERROR ) {
 	  Warn("Error starting triumph music.\n");
+	}
+      } else {
+	// We did no get a new high-score! Play the failure song!
+	alSourcePlay(AL_FAILURE);
+	if( alGetError() != AL_NO_ERROR ) {
+	  Warn("Error starting failure music.\n");
 	}
       }
       first_neg = 0;
@@ -145,20 +215,29 @@ void Loss_Draw(widget_t *w)
 
   // Draw message text
   White();
-  if( hxp == xp ) {
+  if( hss ) {
     sprintf(buf,"You Lose!! Lolol!! - High Score!!");
   } else {
-    sprintf(buf,"You Lose!! Lolol!! - Low Score.. (%lf < %lf)",xp,hxp);
+    sprintf(buf,"You Lose!! Lolol!! - Low Score.. (%lf < %lf)",xp,hxp[0].xp);
   }
-  glRasterPos2f(0.5f-((strlen(buf)*6.0f/2.0f)/ScaleX(w,w->w)), 0.5f+4.0f/ScaleY(w,w->h));
+  glRasterPos2f(0.5f-((strlen(buf)*6.0f/2.0f)/ScaleX(w,w->w)), 0.3f+4.0f/ScaleY(w,w->h));
   printGLf(w->glw->font,"%s",buf);
   sprintf(buf,"XP: %.1lf",xp);
-  glRasterPos2f(0.5f-((strlen(buf)*6.0f/2.0f)/ScaleX(w,w->w)), 0.55f+4.0f/ScaleY(w,w->h));
+  glRasterPos2f(0.5f-((strlen(buf)*6.0f/2.0f)/ScaleX(w,w->w)), 0.35f+4.0f/ScaleY(w,w->h));
   printGLf(w->glw->font,"%s",buf);
   sprintf(buf,"Killed By: (%.0lf,%.0lf,%.0lf)",color.s.x,color.s.y,color.s.z);
-  glRasterPos2f(0.5f-((strlen(buf)*6.0f/2.0f)/ScaleX(w,w->w)), 0.6f+4.0f/ScaleY(w,w->h));
+  glRasterPos2f(0.5f-((strlen(buf)*6.0f/2.0f)/ScaleX(w,w->w)), 0.4f+4.0f/ScaleY(w,w->h));
   printGLf(w->glw->font,"%s",buf);
 
+  // Draw high-score list
+  sprintf(buf,"High Scores:");
+  glRasterPos2f(0.5f-((strlen(buf)*6.0f/2.0f)/ScaleX(w,w->w)), 0.5f+4.0f/ScaleY(w,w->h));
+  printGLf(w->glw->font,"%s",buf);
+  for(i=0; i<10; i++) {
+    sprintf(buf,"XP:    %.1lf",hxp[i].xp);
+    glRasterPos2f(0.5f-((strlen("XP:    ")*6.0f/2.0f)/ScaleX(w,w->w)), (0.025*(i+1))+0.5f+4.0f/ScaleY(w,w->h));
+    printGLf(w->glw->font,"%s",buf);
+  }
 
   glEnable(GL_DEPTH_TEST);
 }
